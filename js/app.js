@@ -13,6 +13,12 @@ const els = {
   inputType: document.getElementById("input-type"),
   profileVersion: document.getElementById("profile-version"),
   profileStatus: document.getElementById("profile-status"),
+  playerName: document.getElementById("player-name"),
+  ingameId: document.getElementById("ingame-id"),
+  profileCreated: document.getElementById("profile-created"),
+  profileModified: document.getElementById("profile-modified"),
+  playTime: document.getElementById("play-time"),
+  saveDevice: document.getElementById("save-device"),
   resetFile: document.getElementById("reset-file"),
   patchButton: document.getElementById("patch-button"),
   patchResult: document.getElementById("patch-result"),
@@ -33,6 +39,42 @@ function renderDlcList() {
     li.textContent = item.displayName;
     return li;
   }));
+}
+
+
+function formatTimestamp(value) {
+  if (typeof value !== "string" || !value) return "—";
+  const match = value.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})/);
+  if (!match) return value;
+  return `${match[1]} ${match[2]}${value.endsWith("Z") ? " UTC" : ""}`;
+}
+
+function formatPlayTime(minutes) {
+  const value = Number(minutes);
+  if (!Number.isFinite(value) || value < 0) return "—";
+  const hours = Math.floor(value / 60);
+  const mins = Math.floor(value % 60);
+  return `${hours.toLocaleString()}h ${mins}m`;
+}
+
+function formatDevice(info) {
+  if (!info || typeof info !== "object") return "—";
+  const type = typeof info.deviceType === "string" ? info.deviceType : "";
+  if (type === "DeviceType_Switch") return "Nintendo Switch";
+  if (type === "DeviceType_Windows") return "Windows";
+  if (type) return type.replace(/^DeviceType_/, "").replaceAll("_", " ");
+  return typeof info.deviceName === "string" && info.deviceName ? info.deviceName : "—";
+}
+
+function renderProfileDetails(profile) {
+  const gameInfo = profile?.GameInfo ?? {};
+  const player = profile?.Player ?? {};
+  els.playerName.textContent = typeof player.Name === "string" && player.Name ? player.Name : "—";
+  els.ingameId.textContent = typeof gameInfo.LastCustomIdOwner === "string" && gameInfo.LastCustomIdOwner ? `mdc:${gameInfo.LastCustomIdOwner}` : "mdc:—";
+  els.profileCreated.textContent = formatTimestamp(gameInfo.Created);
+  els.profileModified.textContent = formatTimestamp(gameInfo.Modified);
+  els.playTime.textContent = formatPlayTime(player.TimePlayedInMinutes);
+  els.saveDevice.textContent = formatDevice(gameInfo.LastSaveDeviceInfo);
 }
 
 function selectedMode() {
@@ -100,6 +142,7 @@ async function loadFile(file) {
     els.inputType.textContent = loaded.inputType === "plain" ? "Decrypted JSON" : "Encrypted profile";
     els.profileVersion.textContent = String(version);
     els.profileStatus.textContent = "Ready";
+    renderProfileDetails(loaded.profile);
     els.uploadState.classList.add("hidden");
     els.profileState.classList.remove("hidden");
   } catch (error) {
@@ -109,6 +152,7 @@ async function loadFile(file) {
     els.inputType.textContent = "Unknown input";
     els.profileVersion.textContent = "—";
     els.profileStatus.textContent = "Error";
+    renderProfileDetails(null);
     els.patchButton.classList.add("hidden");
     showError(error);
   }

@@ -23,7 +23,7 @@
 <span class="section-label">Supported DLCs</span>
 <ul id="dlc-list" class="dlc-list"></ul>
 </div>
-<p class="offline-note"><span aria-hidden="true">✦</span> For offline use only. DDV can refresh DLC ownership online and overwrite these changes.</p>
+<p class="offline-note"><span aria-hidden="true">✦</span><span>For offline use only. When DDV checks DLC ownership online, these changes are overwritten by the online ownership data.</span></p>
 </section>
 <section id="workspace-card" class="card workspace-card">
 <div id="upload-state" class="upload-state" tabindex="0" role="button" aria-label="Choose a DDV profile file">
@@ -32,20 +32,45 @@
 <p>or choose a file from your device</p>
 <button id="choose-file" class="button secondary" type="button">Choose File</button>
 <input id="file-input" type="file" hidden>
-<span class="local-note">Processed locally in your browser · Nothing is uploaded</span>
 </div>
 <div id="profile-state" class="profile-state hidden">
 <div class="section-heading">
 <div class="profile-title">
 <p class="eyebrow">Profile</p>
 <h2 id="profile-name">profile</h2>
+<div class="profile-state-line">
+<span id="input-type" class="state-chip">Encrypted profile</span>
+<span id="profile-status" class="state-chip status-chip">Ready</span>
+<span id="ingame-id" class="state-chip id-chip">mdc:—</span>
+</div>
 </div>
 <button id="reset-file" class="button ghost compact" type="button">Change File</button>
 </div>
-<div class="profile-meta" aria-label="Profile details">
-<span id="input-type">Encrypted DDV profile</span>
-<span>Version <strong id="profile-version">—</strong></span>
-<span id="profile-status">Ready</span>
+<div class="profile-details" aria-label="Loaded profile details">
+<div class="detail-item">
+<span class="detail-label">Player Name</span>
+<strong id="player-name" class="detail-value">—</strong>
+</div>
+<div class="detail-item detail-right">
+<span class="detail-label">Game Version</span>
+<strong id="profile-version" class="detail-value">—</strong>
+</div>
+<div class="detail-item">
+<span class="detail-label">Created</span>
+<strong id="profile-created" class="detail-value">—</strong>
+</div>
+<div class="detail-item detail-right">
+<span class="detail-label">Last Modified</span>
+<strong id="profile-modified" class="detail-value">—</strong>
+</div>
+<div class="detail-item detail-last">
+<span class="detail-label">Play Time</span>
+<strong id="play-time" class="detail-value">—</strong>
+</div>
+<div class="detail-item detail-right detail-last">
+<span class="detail-label">Last Save Device</span>
+<strong id="save-device" class="detail-value">—</strong>
+</div>
 </div>
 <fieldset class="platform-fieldset">
 <legend>Target platform</legend>
