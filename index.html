@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#070d21">
+<meta name="theme-color" content="#071126">
 <title>DDV DLC Patcher</title>
 <link rel="stylesheet" href="./style.css">
 </head>
@@ -12,100 +12,76 @@
 <main class="page-shell">
 <section class="card hero">
 <div class="title-row">
-<div class="title-copy">
+<div>
 <p class="eyebrow">Disney Dreamlight Valley</p>
 <h1>DDV DLC Patcher</h1>
-<p class="lead">Adds DLC ownership data to DDV profiles without modifying unrelated save data.</p>
 </div>
 <div class="support-badge">v1.24.1+</div>
 </div>
-<div class="royal-divider" aria-hidden="true"><span>✦</span></div>
-<div class="info-grid">
-<div class="info-block">
-<span class="info-label">Supported versions</span>
-<strong>DDV v1.24.1 and later</strong>
-<span class="info-detail">GameInfo.Version 591+</span>
-</div>
-<div class="info-block">
-<span class="info-label">Processing</span>
-<strong>Local browser only</strong>
-<span class="info-detail">Nothing is uploaded</span>
-</div>
-</div>
-<div class="dlc-block">
-<div class="dlc-heading">
-<span class="info-label">This patcher adds ownership data for</span>
-<span class="dlc-mark" aria-hidden="true">✧</span>
-</div>
+<div class="hero-divider" aria-hidden="true"></div>
+<div class="supported-row">
+<span class="section-label">Supported DLCs</span>
 <ul id="dlc-list" class="dlc-list"></ul>
 </div>
-<div class="warning"><span class="warning-mark" aria-hidden="true">✦</span><span>For offline use only. DDV can refresh DLC ownership online and overwrite these changes.</span></div>
+<p class="offline-note"><span aria-hidden="true">✦</span> For offline use only. DDV can refresh DLC ownership online and overwrite these changes.</p>
 </section>
-<section class="card action-card">
-<div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Choose a DDV profile file">
-<div class="drop-icon">↓</div>
+<section id="workspace-card" class="card workspace-card">
+<div id="upload-state" class="upload-state" tabindex="0" role="button" aria-label="Choose a DDV profile file">
+<div class="drop-symbol" aria-hidden="true">↓</div>
 <h2>Drop your DDV profile here</h2>
 <p>or choose a file from your device</p>
 <button id="choose-file" class="button secondary" type="button">Choose File</button>
 <input id="file-input" type="file" hidden>
+<span class="local-note">Processed locally in your browser · Nothing is uploaded</span>
 </div>
-</section>
-<section id="profile-card" class="card hidden">
+<div id="profile-state" class="profile-state hidden">
 <div class="section-heading">
-<div>
-<p class="eyebrow">Loaded profile</p>
+<div class="profile-title">
+<p class="eyebrow">Profile</p>
 <h2 id="profile-name">profile</h2>
 </div>
-<button id="reset-file" class="button ghost" type="button">Choose Another File</button>
+<button id="reset-file" class="button ghost compact" type="button">Change File</button>
 </div>
-<div class="profile-grid">
-<div class="profile-stat">
-<span>Input</span>
-<strong id="input-type">Encrypted DDV profile</strong>
-</div>
-<div class="profile-stat">
-<span>GameInfo.Version</span>
-<strong id="profile-version">—</strong>
-</div>
-<div class="profile-stat">
-<span>Status</span>
-<strong id="profile-status">Compatible</strong>
-</div>
+<div class="profile-meta" aria-label="Profile details">
+<span id="input-type">Encrypted DDV profile</span>
+<span>Version <strong id="profile-version">—</strong></span>
+<span id="profile-status">Ready</span>
 </div>
 <fieldset class="platform-fieldset">
 <legend>Target platform</legend>
+<div class="platform-grid">
 <label class="platform-option">
 <input type="radio" name="platform" value="switch" checked>
-<span>
-<strong>Nintendo Switch</strong>
-<small>Add Nintendo ownership data only</small>
-</span>
+<span>Nintendo Switch</span>
 </label>
 <label class="platform-option">
 <input type="radio" name="platform" value="steam">
-<span>
-<strong>Steam</strong>
-<small>Add Steam ownership data only</small>
-</span>
+<span>Steam</span>
 </label>
 <label class="platform-option">
 <input type="radio" name="platform" value="both">
-<span>
-<strong>Nintendo Switch + Steam</strong>
-<small>Add ownership data for both platforms</small>
-</span>
+<span>Switch + Steam</span>
 </label>
+</div>
 </fieldset>
-<button id="patch-button" class="button primary wide" type="button">Patch DLC Ownership</button>
-</section>
-<section id="result-card" class="card hidden">
-<div id="result-status" class="result-status"></div>
-<div id="result-details" class="result-details"></div>
-<button id="download-button" class="button primary wide hidden" type="button">Download Patched Profile</button>
-</section>
-<section id="error-card" class="card error-card hidden">
-<h2>Unable to process this file</h2>
-<p id="error-message"></p>
+<button id="patch-button" class="button primary wide" type="button">Patch &amp; Download</button>
+<div id="patch-result" class="patch-result hidden">
+<div class="result-heading">
+<div>
+<p class="eyebrow">Result</p>
+<h3 id="result-title">Patched</h3>
+</div>
+<button id="download-again" class="button ghost compact hidden" type="button">Download Again</button>
+</div>
+<p id="result-platform" class="result-platform"></p>
+<div id="result-list" class="result-list"></div>
+<p id="result-note" class="result-note"></p>
+</div>
+<div id="inline-error" class="inline-error hidden">
+<strong>Unable to process this file</strong>
+<span id="error-message"></span>
+</div>
+</div>
 </section>
 </main>
 <script type="module" src="./js/app.js"></script>
