@@ -75,8 +75,11 @@ async function dropFile(page, bytes) {
   await page.evaluate(data => {
     const transfer = new DataTransfer();
     transfer.items.add(new File([Uint8Array.from(data)], "profile.json", { type: "application/octet-stream" }));
+    document.body.dispatchEvent(new DragEvent("dragenter", { bubbles: true, cancelable: true, dataTransfer: transfer }));
+    if (document.getElementById("global-drop-overlay").classList.contains("hidden")) throw new Error("Full-screen drop overlay did not appear.");
+    document.body.dispatchEvent(new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer: transfer }));
     const event = new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: transfer });
-    document.getElementById("workspace-card").dispatchEvent(event);
+    document.body.dispatchEvent(event);
   }, Array.from(bytes));
 }
 
@@ -103,11 +106,17 @@ try {
   page.on("download", download => downloads.push(download));
   await page.goto(origin, { waitUntil: "networkidle" });
   assert.equal(await page.locator("#choose-file").count(), 1);
+  assert.equal(await page.locator("#choose-file-global").count(), 1);
+  assert.equal(await page.locator("#choose-file-global").isVisible(), true);
+  assert.equal(await page.locator("#global-drop-overlay").count(), 1);
+  assert.equal(await page.locator(".support-badge").textContent(), "v1.26.1+");
+  assert.equal(await page.locator("#dlc-list li").count(), 5);
   assert.equal(await page.locator("#patch-button").count(), 0);
   const firstDownload = page.waitForEvent("download", { timeout: 20000 });
   await chooseFile(page, raw);
   const downloaded = await firstDownload;
   await awaitTitle(page, "Patched");
+  assert.equal(await page.locator("#choose-file-global").isVisible(), true);
   assert.equal(downloaded.suggestedFilename(), "profile.json");
   const patched = await decryptGeneratedProfile(new Uint8Array(await readFile(await downloaded.path())));
   assert.ok(DLC_CATALOG.every(item => patched.LastKnownBoughtExpansionsAnyPlatform.includes(item.anyPlatformId)));
@@ -142,6 +151,7 @@ try {
   await page.waitForTimeout(600);
   assert.equal(downloads.length, afterDropDownloads);
   assert.equal(await page.locator("#download-again").isVisible(), false);
+  assert.equal(await page.locator("#global-drop-overlay").isVisible(), false);
   assert.deepEqual(pageErrors, []);
   assert.deepEqual(outbound, []);
   await context.close();
