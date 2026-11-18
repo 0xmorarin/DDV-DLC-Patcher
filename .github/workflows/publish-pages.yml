@@ -1,0 +1,58 @@
+name: Publish DDV DLC Patcher to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "index.html"
+      - "style.css"
+      - "js/**"
+      - "assets/**"
+      - ".github/workflows/publish-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: ddv-patcher-pages
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble public static app only
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp index.html style.css dist/
+          cp -R js assets dist/
+          touch dist/.nojekyll
+          test -s dist/index.html
+          test -s dist/js/app.js
+          test -s dist/assets/royal-nebula.svg
+          if grep -R -n -E 'https?://' dist/index.html dist/js dist/style.css; then
+            echo "Unexpected external URL in public runtime" >&2
+            exit 1
+          fi
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - name: Upload public site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - name: Publish
+        id: deployment
+        uses: actions/deploy-pages@v4
