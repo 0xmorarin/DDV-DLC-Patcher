@@ -8,6 +8,7 @@ import { inspectProtoDb } from "./inspect-protodb-iap.mjs";
 const originals = Object.freeze({
   nso: ["3e127d189106162c939f3afbaa4d7de12cd0e15277c9b2e7a4a912faed0d67ba", 99766816],
   text: ["04734882051d695da2589fb905370a5989f8af6f3e78c6e93b776a5f49243dbd", 162397040],
+  rodata: ["42d74f610541529ddf4976cd6a8a730d2ddfd7e74deebe8c1214ed9ea4f62307", 27137116],
   literals: ["a4b1f3617d075fb7ac5f5de29c6d5ba175a2618ff284ffb91fa475635cb2a023", 6790439],
   protoDb: ["dc5015cc37b30f14ebda2b13822ddfa21b311e6f651ba29dc5c5eccaefa2a623", 1335720],
   dump: ["c2b5eac582b8459cdac9b325b8f3c986371e112f996f8cfb3d2fcb014c5a2107", 62282691]
@@ -77,8 +78,8 @@ function packDefinition(iap, group) {
   return marketplaceIds[group].some(market => markets.includes(market));
 }
 
-export function verifyNewSixStoreOriginals({ nso, text, literals, protoDb, dump, profile }) {
-  for (const [name, value] of Object.entries({ nso, text, literals, protoDb, dump })) {
+export function verifyNewSixStoreOriginals({ nso, text, rodata, literals, protoDb, dump, profile }) {
+  for (const [name, value] of Object.entries({ nso, text, rodata, literals, protoDb, dump })) {
     ensure(value instanceof Uint8Array, name + " input bytes");
     verifyBytes(value, name);
   }
@@ -93,10 +94,13 @@ export function verifyNewSixStoreOriginals({ nso, text, literals, protoDb, dump,
   }
   const statusTable = [0, 10, 1, 2];
   const rodataAddress = 0x09cc2b90;
-  const rodataMemoryRva = nso.readUInt32LE(0x34);
+  const rodataMemoryRva = nso.readUInt32LE(0x24);
   const rodataStart = rodataAddress - rodataMemoryRva;
-  ensure(rodataStart >= 0 && rodataStart + 16 <= 0x19e145c,
+  ensure(rodataStart >= 0 && rodataStart + 16 <= rodata.length,
     "ownership type lookup rodata offset");
+  ensure(statusTable.every((value, index) =>
+    rodata.readUInt32LE(rodataStart + index * 4) === value),
+    "original purchased-type lookup values");
   const literalMap = new Map(JSON.parse(literals.toString("utf8"))
     .map(item => [Number(item.address), item.value]));
   ensure(literalMap.get(0xbcb9138) === "_", "native separator literal");
@@ -168,7 +172,7 @@ export function verifyNewSixStoreOriginals({ nso, text, literals, protoDb, dump,
     result: "STATIC_PASS",
     version: "v1.26.1",
     buildId: "3346726B2F640E01",
-    fileProof: "source SHA-256 matched all five original inputs",
+    fileProof: "source SHA-256 matched all six original inputs",
     instructionChecks: originalInstructions.length,
     literalChecks: 2,
     protoDbIAPCount: observed.IAPCount,
@@ -193,21 +197,21 @@ async function main(argv) {
   const args = {};
   for (let i = 0; i < argv.length; i += 2) {
     const key = argv[i];
-    if (!["--nso", "--text", "--literals", "--protodb", "--dump", "--profile"].includes(key) ||
+    if (!["--nso", "--text", "--rodata", "--literals", "--protodb", "--dump", "--profile"].includes(key) ||
         !argv[i + 1] || args[key]) {
-      throw new Error("Usage: node tools/verify-native-six-store-v1261.mjs --nso main --text decompressed-text.bin --literals stringliteral.json --protodb protoDb.bin --dump dump.cs [--profile redacted-source.profile]");
+      throw new Error("Usage: node tools/verify-native-six-store-v1261.mjs --nso main --text decompressed-text.bin --rodata decompressed-rodata.bin --literals stringliteral.json --protodb protoDb.bin --dump dump.cs [--profile redacted-source.profile]");
     }
     args[key] = argv[i + 1];
   }
-  for (const key of ["--nso", "--text", "--literals", "--protodb", "--dump"]) {
+  for (const key of ["--nso", "--text", "--rodata", "--literals", "--protodb", "--dump"]) {
     ensure(args[key], "missing " + key);
   }
-  const names = ["--nso", "--text", "--literals", "--protodb", "--dump"];
+  const names = ["--nso", "--text", "--rodata", "--literals", "--protodb", "--dump"];
   const originals = await Promise.all(names.map(name => readFile(args[name])));
   const profile = args["--profile"] ? await readFile(args["--profile"]) : undefined;
   process.stdout.write(JSON.stringify(verifyNewSixStoreOriginals({
-    nso: originals[0], text: originals[1], literals: originals[2],
-    protoDb: originals[3], dump: originals[4], profile
+    nso: originals[0], text: originals[1], rodata: originals[2],
+    literals: originals[3], protoDb: originals[4], dump: originals[5], profile
   }), null, 2) + "\n");
 }
 
