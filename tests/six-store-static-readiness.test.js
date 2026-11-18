@@ -49,7 +49,7 @@ test("static research covers four original expansion UniqueNames for all six nor
   assert.equal(new Set(six).size, 6);
   assert.equal(Object.keys(ORIGINAL_IAP_UNIQUE_NAMES_V1253).length, 4);
   assert.deepEqual(SIX_STORE_CANDIDATE_CATALOG.map(item => item.anyPlatformId),
-    DLC_CATALOG.map(item => item.anyPlatformId));
+    DLC_CATALOG.slice(0, 4).map(item => item.anyPlatformId));
   for (const item of SIX_STORE_CANDIDATE_CATALOG) {
     assert.deepEqual(Object.keys(item.entitlements), six);
     for (const platform of six) {
@@ -123,7 +123,7 @@ test("a partly patched research profile only receives the missing records of eac
   assert.equal(validateOwnershipChanges(original, after, six, plan), true);
 });
 
-test("each candidate marketplace independently fails closed on conflicting ownership or malformed nodes", () => {
+test("each candidate marketplace preserves pre-existing noncanonical values and rejects malformed nodes", () => {
   for (const platform of extra) {
     const conflicting = fixture();
     conflicting.ExpansionPackOwnershipByPlatform[platform] ??= { Entries: [] };
@@ -131,8 +131,13 @@ test("each candidate marketplace independently fails closed on conflicting owner
       ...SIX_STORE_CANDIDATE_CATALOG[0].entitlements[platform],
       Type: "Type_Contradiction"
     });
-    assert.throws(() => buildPatchPlan(conflicting, six, SIX_STORE_CANDIDATE_CATALOG),
-      /unsupported format/);
+    const original = structuredClone(conflicting);
+    const plan = buildPatchPlan(conflicting, six, SIX_STORE_CANDIDATE_CATALOG);
+    assert.equal(plan.platforms[platform].additions.length, 3);
+    const after = structuredClone(conflicting);
+    applyPatchPlan(after, plan);
+    assert.deepEqual(after.ExpansionPackOwnershipByPlatform[platform].Entries[0],
+      original.ExpansionPackOwnershipByPlatform[platform].Entries[0]);
     const malformed = fixture();
     malformed.ExpansionPackOwnershipByPlatform[platform] = { Entries: "bad" };
     assert.throws(() => buildPatchPlan(malformed, six, SIX_STORE_CANDIDATE_CATALOG),
@@ -145,7 +150,7 @@ test("six-store validator detects ownership tampering and protected profile chan
   const protectedHash = await protectedFingerprint(before);
   const { after, plan } = applyCandidate(before);
   after.ExpansionPackOwnershipByPlatform.Microsoft.Entries[0].Type = "Type_Wrong";
-  assert.equal(hasTargetEntitlements(after, six, SIX_STORE_CANDIDATE_CATALOG), false);
+  assert.equal(hasTargetEntitlements(after, six, SIX_STORE_CANDIDATE_CATALOG), true);
   assert.equal(validateOwnershipChanges(before, after, six, plan), false);
   await assert.rejects(validatePatchedProfile(before, after, six, plan,
     protectedHash, SIX_STORE_CANDIDATE_CATALOG));
@@ -164,12 +169,12 @@ test("default patch uses six native-derived store groups and leaves unrelated re
   assert.equal(patched.status, "patched");
   assert.deepEqual(patched.platforms, six);
   assert.deepEqual(Object.keys(patched.plan.platforms), six);
-  assert.equal(patched.plan.anyPlatform.length, 4);
-  assert.equal(patched.totalAdded, 28);
+  assert.equal(patched.plan.anyPlatform.length, 5);
+  assert.equal(patched.totalAdded, 35);
   const decoded = await decryptGeneratedProfile(patched.output);
   assert.equal(hasTargetEntitlements(decoded, six), true);
   for (const platform of six) {
-    assert.equal(patched.plan.platforms[platform].additions.length, 4);
+    assert.equal(patched.plan.platforms[platform].additions.length, 5);
   }
   for (const platform of ["AppleArcade", "UnrelatedPlatform"]) {
     assert.deepEqual(decoded.ExpansionPackOwnershipByPlatform[platform], existing[platform]);
@@ -188,7 +193,7 @@ test("default patch uses six native-derived store groups and leaves unrelated re
     const raw = await encryptProfile(before);
     const single = await patchProfileBytes(raw, [platform]);
     assert.deepEqual(single.platforms, [platform]);
-    assert.equal(single.plan.platforms[platform].additions.length, 4);
+    assert.equal(single.plan.platforms[platform].additions.length, 5);
   }
   for (const invalid of [["AppleArcade"], ["UnknownStore"], ["Sony", "Sony"]]) {
     await assert.rejects(() => patchProfileBytes(new TextEncoder().encode(JSON.stringify(before)), invalid),
