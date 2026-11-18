@@ -93,19 +93,26 @@ test("raw encrypted profile input is recognized and patched automatically", asyn
   assert.ok(result.output?.length > 0);
 });
 
-test("conflicting existing ownership records stop processing without generating a file", async () => {
+test("pre-existing noncanonical ownership records are preserved without replacement", async () => {
   const profile = sample();
   profile.ExpansionPackOwnershipByPlatform.Nintendo.Entries.push({
     ...DLC_CATALOG[0].entitlements.Nintendo, Type: "Type_Contradictory"
   });
-  await assert.rejects(() => patchProfileBytes(asBytes(profile)), /unsupported format/);
+  const result = await patchProfileBytes(asBytes(profile));
+  assert.equal(result.status, "patched");
+  assert.equal(result.plan.platforms.Nintendo.additions.length, DLC_CATALOG.length - 1);
+  const decoded = await decryptGeneratedProfile(result.output);
+  assert.deepEqual(decoded.ExpansionPackOwnershipByPlatform.Nintendo.Entries[1],
+    profile.ExpansionPackOwnershipByPlatform.Nintendo.Entries[1]);
 });
 
-test("malformed and outdated saves fail closed", async () => {
+test("malformed saves fail closed but old compatible profile versions are not rejected", async () => {
   await assert.rejects(() => patchProfileBytes(new TextEncoder().encode("not a profile")), /validated/);
   const old = sample();
   old.GameInfo.Version = 590;
-  await assert.rejects(() => patchProfileBytes(asBytes(old)), /older than/);
+  const result = await patchProfileBytes(asBytes(old));
+  assert.equal(result.version, 590);
+  assert.equal(result.status, "patched");
 });
 
 test("automatic pipeline does not allow duplicate, unsupported or empty platform overrides", async () => {
