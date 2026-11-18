@@ -64,8 +64,8 @@ test("static research covers four original expansion UniqueNames for all six nor
     }
     assert.equal(item.entitlements.AppleArcade, undefined);
   }
-  assert.deepEqual([...AUTO_PATCH_PLATFORMS], ["Nintendo", "Steam"]);
-  assert.ok(DLC_CATALOG.every(item => extra.every(platform => !(platform in item.entitlements))));
+  assert.deepEqual([...AUTO_PATCH_PLATFORMS], six);
+  assert.ok(DLC_CATALOG.every(item => extra.every(platform => platform in item.entitlements)));
 });
 
 test("six-store isolated planner generates all 24 candidate entries and four common IDs losslessly", async () => {
@@ -155,24 +155,43 @@ test("six-store validator detects ownership tampering and protected profile chan
     protectedHash, SIX_STORE_CANDIDATE_CATALOG));
 });
 
-test("public automatic patch remains restricted to verified Nintendo and Steam writer", async () => {
+test("default patch uses six native-derived store groups and leaves unrelated records intact", async () => {
   const before = fixture();
-  const originalOtherGroups = Object.fromEntries(
-    ["Epic", "AppleArcade", "UnrelatedPlatform"].map(platform =>
+  const existing = Object.fromEntries(
+    ["Nintendo", "Epic", "AppleArcade", "UnrelatedPlatform"].map(platform =>
       [platform, structuredClone(before.ExpansionPackOwnershipByPlatform[platform])]));
   const patched = await patchProfileBytes(await encryptProfile(before));
-  assert.deepEqual(patched.platforms, [...AUTO_PATCH_PLATFORMS]);
-  assert.deepEqual(Object.keys(patched.plan.platforms), [...AUTO_PATCH_PLATFORMS]);
+  assert.equal(patched.status, "patched");
+  assert.deepEqual(patched.platforms, six);
+  assert.deepEqual(Object.keys(patched.plan.platforms), six);
+  assert.equal(patched.plan.anyPlatform.length, 4);
+  assert.equal(patched.totalAdded, 28);
   const decoded = await decryptGeneratedProfile(patched.output);
-  for (const [platform, node] of Object.entries(originalOtherGroups)) {
-    assert.deepEqual(decoded.ExpansionPackOwnershipByPlatform[platform], node);
+  assert.equal(hasTargetEntitlements(decoded, six), true);
+  for (const platform of six) {
+    assert.equal(patched.plan.platforms[platform].additions.length, 4);
   }
-  assert.equal(decoded.ExpansionPackOwnershipByPlatform.Microsoft, undefined);
-  assert.equal(decoded.ExpansionPackOwnershipByPlatform.Sony, undefined);
-  assert.equal(decoded.ExpansionPackOwnershipByPlatform.Apple, undefined);
+  for (const platform of ["AppleArcade", "UnrelatedPlatform"]) {
+    assert.deepEqual(decoded.ExpansionPackOwnershipByPlatform[platform], existing[platform]);
+  }
+  assert.deepEqual(decoded.ExpansionPackOwnershipByPlatform.Nintendo.Entries[0],
+    existing.Nintendo.Entries[0]);
+  assert.deepEqual(decoded.ExpansionPackOwnershipByPlatform.Epic.Entries[0],
+    existing.Epic.Entries[0]);
+  assert.deepEqual(decoded.ExpansionPackOwnershipByPlatform.Epic.PreserveThis,
+    existing.Epic.PreserveThis);
+  assert.deepEqual(decoded.ProtectedData, before.ProtectedData);
+  const repeated = await patchProfileBytes(patched.output);
+  assert.equal(repeated.status, "already-patched");
+  assert.equal(repeated.output, null);
   for (const platform of extra) {
     const raw = await encryptProfile(before);
-    await assert.rejects(() => patchProfileBytes(raw, [platform]),
+    const single = await patchProfileBytes(raw, [platform]);
+    assert.deepEqual(single.platforms, [platform]);
+    assert.equal(single.plan.platforms[platform].additions.length, 4);
+  }
+  for (const invalid of [["AppleArcade"], ["UnknownStore"], ["Sony", "Sony"]]) {
+    await assert.rejects(() => patchProfileBytes(new TextEncoder().encode(JSON.stringify(before)), invalid),
       /Unsupported or duplicate/);
   }
 });
