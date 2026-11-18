@@ -41,7 +41,7 @@ function definition(kind, payload) {
 
 function group(name) {
   return definition("Definitions.StoreFrontGroup",
-    concat(wireBytes(2, name), wireBytes(3, varint(1)), wireVarint(6, 7)));
+    concat(wireBytes(2, name), wireBytes(3, varint(1)), wireVarint(5, name === "Epic" ? 5 : 3), wireVarint(6, 7)));
 }
 
 function productMap(field, marketplace, sku) {
@@ -67,6 +67,8 @@ test("standalone protobuf scanner recognizes IAP UniqueName, AssociatedExpansion
   const evidence = inspectProtoDb(database([["Expansion1PackExpansionPass", "Expansion01", false]]));
   assert.equal(evidence.IAPCount, 1);
   assert.equal(evidence.StoreFrontGroupCount, 2);
+  assert.equal(evidence.StoreFrontGroups.find(item => item.UniqueName === "Nintendo").OriginIds[0], 3);
+  assert.equal(evidence.StoreFrontGroups.find(item => item.UniqueName === "Epic").OriginIds[0], 5);
   assert.equal(evidence.sha256.length, 64);
   assert.deepEqual(evidence.IAPData, [{
     UniqueName: "Expansion1PackExpansionPass",
