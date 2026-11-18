@@ -106,8 +106,12 @@ try {
   page.on("download", download => downloads.push(download));
   await page.goto(origin, { waitUntil: "networkidle" });
   assert.equal(await page.locator("#choose-file").count(), 1);
-  assert.equal(await page.locator("#choose-file-global").count(), 1);
-  assert.equal(await page.locator("#choose-file-global").isVisible(), true);
+  assert.equal(await page.locator(".card").count(), 1);
+  assert.equal(await page.locator(".profile-details").count(), 0);
+  assert.equal(await page.locator("#result-list").count(), 0);
+  assert.equal(await page.locator("#result-platform").count(), 0);
+  assert.equal(await page.locator(".version-scope").count(), 0);
+  assert.equal(await page.locator(".platform-scope").count(), 0);
   assert.equal(await page.locator("#global-drop-overlay").count(), 1);
   assert.equal(await page.locator(".support-badge").textContent(), "v1.24.1+");
   assert.equal(await page.locator("#dlc-list li").count(), 5);
@@ -116,7 +120,9 @@ try {
   await chooseFile(page, raw);
   const downloaded = await firstDownload;
   await awaitTitle(page, "Patched");
-  assert.equal(await page.locator("#choose-file-global").isVisible(), true);
+  assert.equal(await page.locator("#reset-file").isVisible(), true);
+  assert.equal(await page.locator("#result-title").textContent(), "Patched");
+  assert.equal(await page.locator("#result-note").textContent(), "");
   assert.equal(downloaded.suggestedFilename(), "profile.json");
   const patched = await decryptGeneratedProfile(new Uint8Array(await readFile(await downloaded.path())));
   assert.ok(DLC_CATALOG.every(item => patched.LastKnownBoughtExpansionsAnyPlatform.includes(item.anyPlatformId)));
@@ -135,12 +141,13 @@ try {
   const downloadCount = downloads.length;
   await page.locator("#reset-file").click();
   await chooseFile(page, complete);
-  await awaitTitle(page, "Already fully patched");
+  await awaitTitle(page, "Already patched");
   assert.equal(await page.locator("#download-again").isVisible(), false);
   await page.waitForTimeout(600);
   assert.equal(downloads.length, downloadCount);
   const persistentChooserDownload = page.waitForEvent("download", { timeout: 20000 });
-  await chooseFile(page, raw, "profile.json", "#choose-file-global");
+  await page.locator("#reset-file").click();
+  await chooseFile(page, raw);
   assert.equal((await persistentChooserDownload).suggestedFilename(), "profile.json");
   await awaitTitle(page, "Patched");
   await page.locator("#reset-file").click();
@@ -152,6 +159,7 @@ try {
   await page.locator("#reset-file").click();
   await chooseFile(page, new TextEncoder().encode("invalid profile"), "bad.json");
   await page.locator("#inline-error").waitFor({ state: "visible" });
+  assert.equal(await page.locator("#error-title").textContent(), "Invalid file");
   await page.waitForTimeout(600);
   assert.equal(downloads.length, afterDropDownloads);
   assert.equal(await page.locator("#download-again").isVisible(), false);
@@ -164,7 +172,7 @@ try {
   const historical = await legacyDownload;
   await awaitTitle(page, "Patched");
   assert.equal(await page.locator("#dlc-list li").count(), 4);
-  assert.equal(await page.locator("#result-list .result-item").count(), 4);
+  assert.equal(await page.locator("#result-list").count(), 0);
   assert.equal((await page.locator("#dlc-list").textContent()).includes("The Keepsake Sea"), false);
   const legacyOutput = await decryptGeneratedProfile(new Uint8Array(await readFile(await historical.path())));
   assert.equal(legacyOutput.LastKnownBoughtExpansionsAnyPlatform.includes("Expansion04"), false);
@@ -177,7 +185,8 @@ try {
   tooOld.GameInfo.Version = 590;
   await chooseFile(page, await encryptProfile(tooOld));
   await page.locator("#inline-error").waitFor({ state: "visible" });
-  assert.ok((await page.locator("#error-message").textContent()).includes("predates DDV v1.24.1"));
+  assert.equal(await page.locator("#error-title").textContent(), "Unsupported version");
+  assert.equal(await page.locator("#error-message").textContent(), "Requires v1.24.1 or later.");
   await page.waitForTimeout(600);
   assert.equal(downloads.length, legacyDownloads);
   assert.deepEqual(pageErrors, []);
