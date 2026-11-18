@@ -49,6 +49,7 @@ jobs:
             tools/
             index.html
             style.css
+            preview-local.cmd
             package.json
           if-no-files-found: error
           retention-days: 3
