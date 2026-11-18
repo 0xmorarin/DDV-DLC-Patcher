@@ -8,7 +8,7 @@ import { hasTargetEntitlements } from "../js/ownership.js";
 
 function sample() {
   return {
-    GameInfo: { InitialVersion: 591, Version: 626, ProfileUID: "puid_auto_patch_synthetic", Revision: 1 },
+    GameInfo: { InitialVersion: 591, Version: 643, ProfileUID: "puid_auto_patch_synthetic", Revision: 1 },
     Player: { Name: "Synthetic", ContainerInventories: {}, CurrencyAmounts: {}, Cookbook: {} },
     World: { Villages: [], Characters: [], GridCollection: {}, QuestInfo: {} },
     LastKnownBoughtExpansionsAnyPlatform: ["ExistingUnknownExpansion"],
@@ -106,13 +106,11 @@ test("pre-existing noncanonical ownership records are preserved without replacem
     profile.ExpansionPackOwnershipByPlatform.Nintendo.Entries[1]);
 });
 
-test("malformed saves fail closed but old compatible profile versions are not rejected", async () => {
+test("malformed or pre-v1.24.1 saves fail closed", async () => {
   await assert.rejects(() => patchProfileBytes(new TextEncoder().encode("not a profile")), /validated/);
   const old = sample();
   old.GameInfo.Version = 590;
-  const result = await patchProfileBytes(asBytes(old));
-  assert.equal(result.version, 590);
-  assert.equal(result.status, "patched");
+  await assert.rejects(() => patchProfileBytes(asBytes(old)), /predates DDV v1\.24\.1/);
 });
 
 test("automatic pipeline does not allow duplicate, unsupported or empty platform overrides", async () => {
