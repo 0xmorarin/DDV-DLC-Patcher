@@ -1,3 +1,5 @@
+> **Current status (2026-11-18, original-native recheck):** This document predates the verified AArch64 and original-protobuf proof. The Draft PR now activates the six standard groups for the four original DLCs. Original `main.elf`, `stringliteral.json`, `dump.cs` and Switch `protoDb.bin` establish the common storefront selection, map key, exact `PackName` assembly and purchased type. Hardware/runtime on Epic/Microsoft/Sony/Apple remains untested; the patch has not merged to main. See [original-native proof](NATIVE_SIX_STORE_OWNERSHIP_PROOF_V1_25_3_20261118.md). Historical two-store-only and unconfirmed-key language below is superseded.
+
 # Existing four DLCs — six-standard-storefront implementation readiness (v1.25.3)
 
 Status: **CORE_SIX_STORE_STATIC_TESTED / FOUR_ADDITIONAL_PACKNAMES_INFERRED / WRITER_NOT_ACTIVATED**.
