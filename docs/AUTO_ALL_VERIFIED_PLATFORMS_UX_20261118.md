@@ -15,9 +15,10 @@
 
 ## Verification boundaries
 
-- Active registry (verified save-write formats): `Nintendo`, `Steam`.
-- Future marketplace research candidates: `Epic`, `Microsoft` (Xbox/Microsoft Store), `Sony` (PlayStation), `Apple` (Mac App Store). v1.25.3 `StoreFrontGroup` and native `IAPData.get_KeyFriendlyId` establish a strong generic template, but **do not establish actual platform save-map keys/codec/runtime persistence**. Do not put inferred strings into the production write allowlist.
-- `AppleArcade` uses a different title/content model and remains out of scope.
+- **One logical cross-save Profile schema** for all standard editions; do not require a separate game save schema for each marketplace. Store-specific ownership entries are different keys *inside* the same Profile.
+- Standard marketplace groups: `Nintendo`, `Steam`, `Epic`, `Microsoft` (Xbox/Microsoft Store), `Sony` (PS4/PS5), `Apple` (standard Mac App Store). This complete six-group registry is `STANDARD_STOREFRONT_GROUPS`; the current evidence-gated **write allowlist** remains `Nintendo`, `Steam`.
+- New storefront writers require exact `IAPData.get_KeyFriendlyId` strings and observed or independently proven ownership behavior, **not** platform-specific logical save-schema verification. The physical console export/encryption wrapper remains a separate transport question.
+- **Explicit exclusion:** `AppleArcade` is a separate edition with expansions/adventure packs bundled by default and its own cross-save ecosystem; the DLC ownership patch has no purpose there. Keep it out of both the storefront registry and the writer.
 - Deluxe/Ultimate edition purchases and online premium grants are not edited.
 - Neither a local save ownership marker nor a patcher success message asserts purchased storefront entitlement, online verification, or cross-buy.
 - An actual Playwright/browser E2E user-gesture download and offline device reload still need independent verification. The existing GitHub Actions test is Node contract/static UI testing, not a completed browser download test.
@@ -26,4 +27,4 @@
 
 Run `npm test` on the draft branch. Automated tests cover both verified platforms, partial additions, all-owned skip, encrypted input, idempotency, protected fields, retained edition-like records, unsupported structures, contradiction errors, and HTML removal of legacy controls.
 
-**Release gate:** Re-run CI on final new DLC Build; validate new catalog keys, 2-platform originals, and new 6-platform saved ownership format before extending the allowlist. Preserve main until ready.
+**Release gate:** Re-run CI on final new DLC Build; validate new catalog keys and the exact six standard storefront ownership identifiers inside the shared Profile before extending the allowlist; do not invent separate save structures. Preserve main until ready.
