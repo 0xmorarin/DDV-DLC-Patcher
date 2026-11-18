@@ -35,7 +35,5 @@ jobs:
           node-version: "22"
       - name: Install Chromium browser test dependency
         run: npm install --no-save --no-package-lock --ignore-scripts playwright@1.56.1
-      - name: Install browser runtime
-        run: npx playwright install --with-deps chromium
       - name: Test browser download and no-op contracts
         run: node tests/browser-e2e.mjs
