@@ -5,6 +5,7 @@ on:
     paths:
       - "js/**"
       - "tests/**"
+      - "tools/**"
       - "package.json"
       - "docs/**"
       - ".github/workflows/ownership-tests.yml"
