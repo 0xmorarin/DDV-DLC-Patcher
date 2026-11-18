@@ -2,6 +2,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests/*.test.js"
+    "test": "node --check js/app.js && node --check js/auto-patch.js && node --test tests/*.test.js"
   }
 }
