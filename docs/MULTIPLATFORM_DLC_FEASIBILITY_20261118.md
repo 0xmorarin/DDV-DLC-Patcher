@@ -1,6 +1,6 @@
 # Multi-platform DLC patch feasibility — static evidence (2026-11-18)
 
-**Research only, not a supported-platform announcement.** Nintendo + Steam remain the only verified write modes. The source is the legitimately obtained v1.25.3 Steam `protoDb.bin`, cross-referenced with the v1.25.3 Switch IL2CPP `dump.cs` and the current Patcher source. Full method, hashes, script and summarized JSON are archived privately in the project's DDVRENX research folder as `DDV_DLC_PATCHER_MULTIPLATFORM_STATIC_RESEARCH_20261118.zip`.
+**Research only, not a supported-platform announcement.** Nintendo + Steam remain the only currently enabled write groups; the shared logical Profile schema applies to all standard editions. The source is the legitimately obtained v1.25.3 Steam `protoDb.bin`, cross-referenced with the v1.25.3 Switch IL2CPP `dump.cs` and the current Patcher source. Full method, hashes, script and summarized JSON are archived privately in the project's DDVRENX research folder as `DDV_DLC_PATCHER_MULTIPLATFORM_STATIC_RESEARCH_20261118.zip`.
 
 ## Observed source schema
 
@@ -20,6 +20,26 @@
 
 The four original expansion pass packages (`Expansion1PackExpansionPass`, `Expansion2PackExpansionPass`, `Expansion3PackExpansionPass`, `MiniExpansion1PackExpansionPass`) each include real storefront product records for Nintendo, Xbox, Steam, all four PS4/PS5 regional group entries, AppleAppStore and Epic (the latter via `CustomStoreFrontProductIds`). **Store product IDs are not save `PackName` values.** This dataset predates the new November 18 DLC.
 
+## Architecture clarification — owner decision 2026-11-18
+
+**One cross-save logical Profile schema for standard editions, not one separate game-save schema per marketplace.** `Profile.ExpansionPackOwnershipByPlatform` is already a common string-keyed map; a Profile transferred through DDV's cross-save system can carry entries for all standard storefront groups. PlayStation cross-save is supported since June 18, 2025. We therefore **do not require a new game-Profile schema implementation, or a different game-save model for each marketplace**, and do not gate storefront support on the assumption of platform-specific logical layouts.
+
+Keep three layers separate:
+
+1. **Logical Profile:** shared message/schema used by the game, including `LastKnownBoughtExpansionsAnyPlatform` and `ExpansionPackOwnershipByPlatform`.
+2. **Entitlement source IDs:** `StoreFrontGroup.UniqueName`, `IAPData.get_KeyFriendlyId`, exact `PackName` and `Type`. This differs by marketplace **inside the same Profile**. Accurate strings and online/offline behavior still need verification.
+3. **Physical export/wrapper:** native console save-container or encryption/ZIP envelope may differ in local extraction workflows; official cross-save does not by itself prove byte-identical files exported from each console. The Patcher works on a decoded common Profile and its supported input codec, not the native container.
+
+**Apple Arcade is explicitly excluded, permanently for the current paid-expansion patch purpose.** The Arcade Edition bundles all existing expansion/adventure packs by default and has a separate cross-save ecosystem; no storefront DLC ownership patch is needed. `Apple` is the *standard Mac App Store* group, not `AppleArcade`.
+
+The desired end-state is one drop-to-download action that writes all six standard marketplace ownership groups at once. Adding a group to the active writer requires confirming exact entitlement key generation (not proving a different Profile schema), preserving unrelated entries, and run-time persistence. This document is historical: its earlier per-platform schema/sample language below is **superseded** by this clarification.
+
+Official facts:
+- https://gameloft.helpshift.com/hc/en/66-disney-dreamlight-valley/faq/4830-cross-save-now-supported-on-playstation/
+- https://gameloft.helpshift.com/hc/en/66-disney-dreamlight-valley/faq/3554-do-expansions-and-adventure-packs-support-cross-buy-across-multiple-platforms/
+- https://gameloft.helpshift.com/hc/en/78-disney-dreamlight-valley-apple-arcade/faq/3564-how-is-disney-dreamlight-valley-arcade-edition-different-from-buying-disney-dreamlight-valley-on-the-mac-app-store-or-other-platforms/
+- https://gameloft.helpshift.com/hc/en/66-disney-dreamlight-valley/faq/3546-does-disney-dreamlight-valley-arcade-edition-have-cross-save-1701254314/
+
 ## Feasibility, outstanding gates
 
 - **Epic:** most practical next candidate, pending authentic redacted Epic `ExpansionPackOwnershipByPlatform` keys/entries and encrypted `profile` codec round trip.
@@ -29,13 +49,13 @@ The four original expansion pass packages (`Expansion1PackExpansionPass`, `Expan
 - **Nintendo Switch 2:** no separately verified DLC/save-key row from this source. Do not assume that an engine Switch2 enum proves cross-version compatibility.
 - **Apple Arcade:** currently outside the product scope; its version includes expansions without individual premium purchase/Store-front entitlement handling. Treat its save schema as a distinct title.
 
-The current patcher `PLATFORM_MODES` and `DLC_CATALOG.entitlements` only include Nintendo and Steam; its generic patch planner already preserves unknown nonselected platforms. **Do not add guessed strings** such as `Expansion3PackExpansionPass_Epic_OnlineKey` or `Expansion3PackExpansionPass_Sony_OnlineKey` without authentic profile evidence. `StoreFrontGroup.UniqueName` and `ExpansionPackOwnershipByPlatform` keys are separate concepts.
+The current patcher `AUTO_PATCH_PLATFORMS` and `DLC_CATALOG.entitlements` still activate Nintendo and Steam; the shared-profile patch planner preserves all other existing platform entries. `STANDARD_STOREFRONT_GROUPS` enumerates the six standard edition groups and excludes AppleArcade. **Do not add guessed strings** such as `Expansion3PackExpansionPass_Epic_OnlineKey` or `Expansion3PackExpansionPass_Sony_OnlineKey` without authentic profile evidence. `StoreFrontGroup.UniqueName` and `ExpansionPackOwnershipByPlatform` keys are separate concepts.
 
 ## Next verified route
 
-1. Obtain legitimately backed-up, identity-redacted profiles from each candidate. Compare only real platform map names and existing `PackName`/`PackType`/`Type` records; track `GameInfo.Version` and actual game/client version separately.
-2. Validate JSON/encrypted transport and parse constraints, including profile identifier, schema and integer-safe fields, before adding any write option.
-3. Add new entitlement definitions, UI choices and tests only for fully evidenced platforms. Verify platform-specific load/round trip, all original DLCs, unrelated data preservation, offline behavior, reload persistence and subsequent sync.
+1. Finish native derivation of `IAPData.get_KeyFriendlyId` and its literal separators; cross-check actual `PackName` and platform map keys where available. **Do not seek independent Profile schemas:** the logical schema is shared.
+2. Continue using the one shared JSON/Profile parser and existing encrypted codec, while validating transport wrappers independently if user-exported local files are not already in supported form.
+3. Activate additional storefront entitlement definitions and regression tests only after source-accurate keys are established. Validate all original DLCs, preservation of other ownership entries, offline behavior, reload persistence and subsequent sync.
 4. Repeat product-ID/schema research for the November 18 expansion in its actual updated game data. Do not infer it from v1.25.3.
 
 Official platform, cross-save, cross-buy and Arcade context:
@@ -44,7 +64,7 @@ Official platform, cross-save, cross-buy and Arcade context:
 - https://gameloft.helpshift.com/hc/en/66-disney-dreamlight-valley/faq/3554-do-expansions-and-adventure-packs-support-cross-buy-across-multiple-platforms/
 - https://gameloft.helpshift.com/hc/en/78-disney-dreamlight-valley-apple-arcade/faq/3564-how-is-disney-dreamlight-valley-arcade-edition-different-from-buying-disney-dreamlight-valley-on-the-mac-app-store-or-other-platforms/
 
-**No Patcher runtime code or catalog changed. This PR remains Draft.**
+**Updated:** Common standard-storefront group registry and AppleArcade exclusion tests have been added. Production entitlement writer remains Nintendo/Steam-only pending exact key validation. The PR remains Draft.
 
 
 ## Native save PackName construction — Switch v1.25.3
