@@ -2,6 +2,8 @@
 
 # Existing four DLCs — six-standard-storefront implementation readiness (v1.25.3)
 
+**Historical research snapshot:** Five DLC passes and all six standard store groups are now active on Draft PR #1 based on a later v1.26.1 exact-native audit. The latest compatibility and preservation contract is [v1.26.1+ unified Patcher](./V1261_UNIFIED_FIVE_DLC_PATCHER_CONTRACT_20261119.md). The non-activated status below records the earlier milestone.
+
 Status: **CORE_SIX_STORE_STATIC_TESTED / FOUR_ADDITIONAL_PACKNAMES_INFERRED / WRITER_NOT_ACTIVATED**.
 
 This research is deliberately separate from the November 18 new-expansion identification. No claim of Epic, Microsoft, Sony or Mac App Store compatibility is made merely because a synthetic six-store test passed.
