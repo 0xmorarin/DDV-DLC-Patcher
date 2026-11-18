@@ -1,5 +1,3 @@
-export const MIN_SUPPORTED_PROFILE_VERSION = 591;
-export const MAX_VERIFIED_PROFILE_VERSION = 626;
 export const ZIP_INNER_NAME = "profile";
 export const HEX_KEY = "62357168683873614A38556C444A557A545A5864325467366D626F3857386E35";
 export const STANDARD_STOREFRONT_GROUPS = Object.freeze([
@@ -46,5 +44,12 @@ export const DLC_CATALOG = [
     anyPlatformId: "WinnieDLC",
     family: "MiniExpansion1Pack",
     entitlements: entitlementDefinitions("MiniExpansion1PackExpansionPass")
+  },
+  {
+    id: "expansion04",
+    displayName: "The Keepsake Sea",
+    anyPlatformId: "Expansion04",
+    family: "Expansion4Pack",
+    entitlements: entitlementDefinitions("Expansion4PackExpansionPass")
   }
 ];
