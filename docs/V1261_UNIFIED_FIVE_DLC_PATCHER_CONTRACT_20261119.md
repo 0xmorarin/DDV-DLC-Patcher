@@ -62,7 +62,11 @@ This makes the tool a *local save-data marker editor*. It does not grant marketp
 
 ## User experience
 
-The page shows `v1.24.1+` and the two DLC eligibility ranges. Before loading, it lists all five possible DLCs with The Keepsake Sea labeled `v1.26.1+`; once loaded, the list switches to the four- or five-DLC catalog selected by the save version. All six normal storefronts are processed. Files can be dropped anywhere in the browser page, not just in the central card; a full-viewport overlay indicates a file drag. A persistent **Choose File** button remains available in the heading as well as the initial drop card; a **Change File** button is available after processing. Selection or drop immediately runs the offline patch/check flow and, only when additions exist and verification completes, starts a local download. **Download Again** provides a fallback.
+**One unified card, minimum copy.** The previous separate hero and workspace cards were merged into one responsive card. The two long release-range and storefront paragraphs were removed entirely, as were the player/account/created/modified/play-time/device details and the platform-by-platform/DLC-by-DLC patch report. The compact DLC name list remains, with four or five names depending on the validated save version; The Keepsake Sea carries a short `v1.26.1+` suffix. The version badge still reads `v1.24.1+`.
+
+A file can be dropped anywhere on the page or chosen with the **Choose File** button. Patch/download begins automatically. The outcome is limited to `Patched`, `Already patched`, `Unsupported version`, `Invalid file` or an exceptional `Could not patch` status with a brief explanation. `Download Again` remains available only after successful output creation, and **Choose another file** resets the card. No counts, personal profile fields, individual DLC additions or selectable platform options appear. A concise offline-only caution remains.
+
+The full-screen drag overlay, local processing and zero external requests remain unchanged. The version minimum and the four-versus-five DLC rules live in the patch engine; the presentation does not choose entitlement rules.
 
 ## Verification status and limitations
 
