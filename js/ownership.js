@@ -72,12 +72,7 @@ export function inspectOwnershipSchema(profile, selectedPlatforms) {
 }
 
 function checkExistingEntitlement(entries, expected) {
-  const matches = entries.filter(entry => isPlainObject(entry) && entry.PackName === expected.PackName);
-  if (matches.length === 0) return false;
-  for (const entry of matches) {
-    if (entry.PackType !== expected.PackType || entry.Type !== expected.Type) throw new Error(`Existing ownership entry has an unsupported format: ${expected.PackName}`);
-  }
-  return true;
+  return entries.some(entry => isPlainObject(entry) && entry.PackName === expected.PackName);
 }
 
 export function buildPatchPlan(profile, selectedPlatforms, catalog = DLC_CATALOG) {
@@ -135,7 +130,6 @@ export function hasTargetEntitlements(profile, selectedPlatforms, catalog = DLC_
       const expected = item.entitlements[platform];
       const matches = node.Entries.filter(entry => isPlainObject(entry) && entry.PackName === expected.PackName);
       if (matches.length === 0) return false;
-      if (matches.some(entry => entry.PackType !== expected.PackType || entry.Type !== expected.Type)) return false;
     }
   }
   return true;
