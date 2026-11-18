@@ -2,6 +2,8 @@
 
 # The Keepsake Sea DLC Patcher: post-release intake and publication gate
 
+**Historical preflight runbook:** v1.26.1 source files were subsequently verified and the five-DLC unified patcher was implemented on Draft PR #1. Version-only blocking was removed by owner policy. Consult [the current v1.26.1+ contract](./V1261_UNIFIED_FIVE_DLC_PATCHER_CONTRACT_20261119.md) for current behavior; the steps below retain the earlier pre-release intake state as a reusable template.
+
 Preparation date: 2026-11-18 JST. Status: **INTAKE_READY / NEW_BUILD_EVIDENCE_PENDING / RELEASE_BLOCKED**.
 
 This document describes the next repeatable step. It does not assert that The Keepsake Sea is covered by the active patcher.
