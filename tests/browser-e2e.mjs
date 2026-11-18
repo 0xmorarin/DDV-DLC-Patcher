@@ -107,8 +107,13 @@ try {
   page.on("pageerror", error => pageErrors.push(error.message));
   page.on("download", download => downloads.push(download));
   await page.goto(origin, { waitUntil: "networkidle" });
-  assert.equal(await page.locator(".royal-seal").count(), 1);
-  assert.equal(await page.locator(".ornament-divider").count(), 1);
+  assert.equal(await page.locator(".royal-seal").count(), 0);
+  assert.equal(await page.locator(".ornament-divider").count(), 0);
+  assert.equal(await page.locator(".simple-divider").count(), 1);
+  assert.equal(await page.locator(".royal-corners").count(), 0);
+  assert.equal(await page.locator("#status-mark").count(), 0);
+  assert.equal(await page.locator(".drop-symbol svg path").count(), 3);
+  assert.equal(await page.locator(".card").count(), 1);
   const background = await page.evaluate(() => getComputedStyle(document.body).backgroundImage);
   assert.match(background, /royal-nebula\.svg/);
   const nebula = await page.request.get(origin + "/assets/royal-nebula.svg");
@@ -143,6 +148,7 @@ try {
   await awaitTitle(page, "Patched");
   assert.equal(await page.locator("#reset-file").isVisible(), true);
   assert.equal(await page.locator("#result-title").textContent(), "Patched");
+  assert.equal(await page.locator("#patch-result .status-mark").count(), 0);
   assert.equal(await page.locator("#result-note").textContent(), "");
   assert.equal(downloaded.suggestedFilename(), "profile.json");
   const patched = await decryptGeneratedProfile(new Uint8Array(await readFile(await downloaded.path())));
