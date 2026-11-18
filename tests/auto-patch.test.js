@@ -109,7 +109,7 @@ test("malformed and outdated saves fail closed", async () => {
 });
 
 test("automatic pipeline does not allow duplicate, unsupported or empty platform overrides", async () => {
-  for (const selection of [[], ["Nintendo", "Nintendo"], ["Epic"], ["AppleArcade"], ["Steam", "Unknown"]]) {
+  for (const selection of [[], ["Nintendo", "Nintendo"], ["UnknownStore"], ["AppleArcade"], ["Steam", "Unknown"]]) {
     await assert.rejects(() => patchProfileBytes(asBytes(sample()), selection), /Unsupported or duplicate/);
   }
 });
