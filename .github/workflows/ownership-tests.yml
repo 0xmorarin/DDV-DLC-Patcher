@@ -39,3 +39,16 @@ jobs:
         run: npm install --no-save --no-package-lock --ignore-scripts playwright@1.56.1
       - name: Test browser download and no-op contracts
         run: node tests/browser-e2e.mjs
+      - name: Package source for local regression verification
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddv-patcher-local-source
+          path: |
+            js/
+            tests/
+            tools/
+            index.html
+            style.css
+            package.json
+          if-no-files-found: error
+          retention-days: 3
