@@ -1,3 +1,5 @@
+> **Current status (2026-11-18, original-native recheck):** This document predates the verified AArch64 and original-protobuf proof. The Draft PR now activates the six standard groups for the four original DLCs. Original `main.elf`, `stringliteral.json`, `dump.cs` and Switch `protoDb.bin` establish the common storefront selection, map key, exact `PackName` assembly and purchased type. Hardware/runtime on Epic/Microsoft/Sony/Apple remains untested; the patch has not merged to main. See [original-native proof](NATIVE_SIX_STORE_OWNERSHIP_PROOF_V1_25_3_20261118.md). Historical two-store-only and unconfirmed-key language below is superseded.
+
 # Automatic all-verified-platform DLC patch workflow (2026-11-18)
 
 **Owner UX decision:** no per-platform selection; no Patch button. One file drop / Choose File invokes the complete operation automatically.
@@ -16,7 +18,7 @@
 ## Verification boundaries
 
 - **One logical cross-save Profile schema** for all standard editions; do not require a separate game save schema for each marketplace. Store-specific ownership entries are different keys *inside* the same Profile.
-- Standard marketplace groups: `Nintendo`, `Steam`, `Epic`, `Microsoft` (Xbox/Microsoft Store), `Sony` (PS4/PS5), `Apple` (standard Mac App Store). This complete six-group registry is `STANDARD_STOREFRONT_GROUPS`; the current evidence-gated **write allowlist** remains `Nintendo`, `Steam`.
+- Standard marketplace groups: `Nintendo`, `Steam`, `Epic`, `Microsoft` (Xbox/Microsoft Store), `Sony` (PS4/PS5), `Apple` (standard Mac App Store). This complete six-group registry is `STANDARD_STOREFRONT_GROUPS`; the current original-native-evidenced **write allowlist** contains all six standard storefront groups.
 - New storefront writers require exact `IAPData.get_KeyFriendlyId` strings and observed or independently proven ownership behavior, **not** platform-specific logical save-schema verification. The physical console export/encryption wrapper remains a separate transport question.
 - **Explicit exclusion:** `AppleArcade` is a separate edition with expansions/adventure packs bundled by default and its own cross-save ecosystem; the DLC ownership patch has no purpose there. Keep it out of both the storefront registry and the writer.
 - Deluxe/Ultimate edition purchases and online premium grants are not edited.
@@ -25,6 +27,6 @@
 
 ## Regression evidence
 
-Run `npm test` on the draft branch and `node tests/browser-e2e.mjs` with Playwright and Chrome available. Automated tests cover both verified platforms, partial additions, all-owned skip, encrypted input, idempotency, protected fields, retained edition-like records, unsupported structures, contradiction errors, and HTML removal of legacy controls.
+Run `npm test` on the draft branch and `node tests/browser-e2e.mjs` with Playwright and Chrome available. Automated tests cover all six statically evidenced platform groups, partial additions, all-owned skip, encrypted input, idempotency, protected fields, retained edition-like records, unsupported structures, contradiction errors, and HTML removal of legacy controls.
 
-**Release gate:** Re-run CI on final new DLC Build; validate new catalog keys and the exact six standard storefront ownership identifiers inside the shared Profile before extending the allowlist; do not invent separate save structures. Preserve main until ready.
+**Release gate:** Re-run CI on final new DLC Build; validate new catalog keys and reconfirm the six existing storefront contracts on the updated build before release; do not invent separate save structures. Preserve main until ready.
