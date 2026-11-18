@@ -1,3 +1,5 @@
+> **Current status (2026-11-18, original-native recheck):** This document predates the verified AArch64 and original-protobuf proof. The Draft PR now activates the six standard groups for the four original DLCs. Original `main.elf`, `stringliteral.json`, `dump.cs` and Switch `protoDb.bin` establish the common storefront selection, map key, exact `PackName` assembly and purchased type. Hardware/runtime on Epic/Microsoft/Sony/Apple remains untested; the patch has not merged to main. See [original-native proof](NATIVE_SIX_STORE_OWNERSHIP_PROOF_V1_25_3_20261118.md). Historical two-store-only and unconfirmed-key language below is superseded.
+
 # The Keepsake Sea DLC Patcher: post-release intake and publication gate
 
 Preparation date: 2026-11-18 JST. Status: **INTAKE_READY / NEW_BUILD_EVIDENCE_PENDING / RELEASE_BLOCKED**.
@@ -10,7 +12,7 @@ This document describes the next repeatable step. It does not assert that The Ke
 - Real privately stored Steam v1.25.3 encrypted profile: `GameInfo.Version=626`, `InitialVersion=518`, ownership map keys `Nintendo` and `Steam`, four existing DLC passes. Original save is never committed.
 - Switch v1.25.3 baseline Build ID: `9A239D3DB569756D`. Different game version, Build ID, full module hash, title ID, and save schema numbers are different identifiers.
 - v1.25.3 source research: original `protoDb.bin` SHA-256 `1912bb552abddac8b112fa5a781a0401672add38a62276d6c9174db39b899ae1`; 49 IAP records; seven storefront groups; four previously known normal expansion-pass product definitions across six standard storefronts. Stored save ownership identifiers for Epic, Microsoft, Sony and Apple have **not** been observed.
-- The latest four-entry production catalog and `Nintendo` + `Steam` writer allowlist remain intentionally unchanged.
+- The four-entry production catalog stays unchanged; the Draft PR now has six statically evidenced standard-store writer groups. Four non-Switch/Steam runtime clients remain untested.
 - Profile writes above current `GameInfo.Version=626` abort until an explicit new-build compatibility review.
 
 ## Existing private Drive intake
@@ -62,7 +64,7 @@ It parses `Definitions.IAPData` and `Definitions.StoreFrontGroup` from the proto
 4. Cross-correlate actual save `LastKnownBoughtExpansionsAnyPlatform` and `ExpansionPackOwnershipByPlatform` differences with IAP definitions. Record the exact map key and matching `PackName` / `PackType` / `Type` separately for each target storefront. Shared Profile layout is already the architectural model; do not demand an invented separate Profile class per storefront.
 5. Validate the real new-version profile codec and ownership map schema. Update `MAX_VERIFIED_PROFILE_VERSION` only after compatibility is checked. Reject formats and versions that remain unverified. Do not lower protection in order to make tests pass.
 6. Activate `The Keepsake Sea` in `DLC_CATALOG` only after verifying its actual ID, canonical IAP identifier and entitlement fields; replace the intentional four-entry PRE-RELEASE test gate with the evidence-backed expected catalog.
-7. Activate `Epic`, `Microsoft`, `Sony`, and `Apple` storefront writers only after each saved map key and exact pass records are proven. Keep `AppleArcade` permanently excluded. Keep all Deluxe/Ultimate or edition-like data untouched.
+7. Reconfirm the already statically proven `Epic`, `Microsoft`, `Sony`, and `Apple` storefront contracts against any updated original binaries; keep `AppleArcade` excluded. Do not require unavailable devices as a static-analysis gate. Keep all Deluxe/Ultimate or edition-like data untouched.
 8. Run `npm test`, Chromium E2E, and an actual backed-up, expendable new-version save round trip. Verify automatically downloaded output, no-op skip, no external upload, preserved non-ownership data, idempotency and failed-output suppression.
 9. Validate actual offline game reload and separately report the outcome of online synchronization. Local ownership records are not purchase rights or cross-buy.
 10. Review new HEAD, conflict status, CI, and the release gate. Keep Draft PR #1 and main unchanged until evidence and real-game behavior permit publishing. After release, repeat identity and compatibility checks for the 2026-12-09 update.
@@ -78,4 +80,4 @@ It parses `Definitions.IAPData` and `Definitions.StoreFrontGroup` from the proto
 | DEVICE_VERIFIED | Target game rebuild loads, save/reload succeeds, offline access and sync effects recorded |
 | RELEASE_READY | All enabled storefronts and new DLC pass required gates; public metadata accurately discloses remaining limits |
 
-The intended six-store, five-pass end-state is separate from the currently deployed two-store, four-pass functionality. Any failing required gate is a publication blocker, not permission to fill in a guessed identifier.
+The Draft PR currently implements six stores for the four original passes; main remains unchanged. The intended five-pass end-state still needs actual new-DLC data. Any failing required gate is a publication blocker, not permission to fill in a guessed identifier.
