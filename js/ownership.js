@@ -23,20 +23,20 @@ function deepEqual(a, b) {
   return false;
 }
 
-function familyRank(packName) {
+function familyRank(packName, catalog) {
   if (typeof packName !== "string") return null;
-  for (let i = 0; i < DLC_CATALOG.length; i++) if (packName.startsWith(DLC_CATALOG[i].family)) return i;
+  for (let i = 0; i < catalog.length; i++) if (packName.startsWith(catalog[i].family)) return i;
   return null;
 }
 
-function findAnyInsertIndex(values, rank) {
-  const later = new Set(DLC_CATALOG.slice(rank + 1).map(item => item.anyPlatformId));
+function findAnyInsertIndex(values, rank, catalog) {
+  const later = new Set(catalog.slice(rank + 1).map(item => item.anyPlatformId));
   for (let i = 0; i < values.length; i++) if (later.has(values[i])) return i;
   return values.length;
 }
 
-function findPlatformInsertIndex(entries, rank) {
-  const family = DLC_CATALOG[rank].family;
+function findPlatformInsertIndex(entries, rank, catalog) {
+  const family = catalog[rank].family;
   let sameFamilyLast = -1;
   for (let i = 0; i < entries.length; i++) {
     const name = isPlainObject(entries[i]) ? entries[i].PackName : null;
@@ -45,7 +45,7 @@ function findPlatformInsertIndex(entries, rank) {
   if (sameFamilyLast >= 0) return sameFamilyLast + 1;
   for (let i = 0; i < entries.length; i++) {
     const name = isPlainObject(entries[i]) ? entries[i].PackName : null;
-    const otherRank = familyRank(name);
+    const otherRank = familyRank(name, catalog);
     if (otherRank !== null && otherRank > rank) return i;
   }
   return entries.length;
@@ -80,16 +80,16 @@ function checkExistingEntitlement(entries, expected) {
   return true;
 }
 
-export function buildPatchPlan(profile, selectedPlatforms) {
+export function buildPatchPlan(profile, selectedPlatforms, catalog = DLC_CATALOG) {
   inspectOwnershipSchema(profile, selectedPlatforms);
   const plan = { anyPlatform: [], platforms: {}, createRoot: profile.ExpansionPackOwnershipByPlatform === undefined };
   const anyWorking = profile.LastKnownBoughtExpansionsAnyPlatform.slice();
-  for (let rank = 0; rank < DLC_CATALOG.length; rank++) {
-    const value = DLC_CATALOG[rank].anyPlatformId;
+  for (let rank = 0; rank < catalog.length; rank++) {
+    const value = catalog[rank].anyPlatformId;
     if (!anyWorking.includes(value)) {
-      const index = findAnyInsertIndex(anyWorking, rank);
+      const index = findAnyInsertIndex(anyWorking, rank, catalog);
       anyWorking.splice(index, 0, value);
-      plan.anyPlatform.push({ index, value, dlcId: DLC_CATALOG[rank].id });
+      plan.anyPlatform.push({ index, value, dlcId: catalog[rank].id });
     }
   }
   const root = profile.ExpansionPackOwnershipByPlatform ?? {};
@@ -98,14 +98,14 @@ export function buildPatchPlan(profile, selectedPlatforms) {
     const entries = exists ? root[platform].Entries : [];
     const working = entries.slice();
     const additions = [];
-    for (let rank = 0; rank < DLC_CATALOG.length; rank++) {
-      const expected = DLC_CATALOG[rank].entitlements[platform];
+    for (let rank = 0; rank < catalog.length; rank++) {
+      const expected = catalog[rank].entitlements[platform];
       if (!expected) throw new Error(`No DLC entitlement definition exists for ${platform}.`);
       if (!checkExistingEntitlement(working, expected)) {
-        const index = findPlatformInsertIndex(working, rank);
+        const index = findPlatformInsertIndex(working, rank, catalog);
         const entry = { ...expected };
         working.splice(index, 0, entry);
-        additions.push({ index, entry, dlcId: DLC_CATALOG[rank].id });
+        additions.push({ index, entry, dlcId: catalog[rank].id });
       }
     }
     plan.platforms[platform] = { createNode: !exists, additions };
@@ -124,14 +124,14 @@ export function applyPatchPlan(profile, plan) {
   return profile;
 }
 
-export function hasTargetEntitlements(profile, selectedPlatforms) {
-  if (!DLC_CATALOG.every(item => profile.LastKnownBoughtExpansionsAnyPlatform.includes(item.anyPlatformId))) return false;
+export function hasTargetEntitlements(profile, selectedPlatforms, catalog = DLC_CATALOG) {
+  if (!catalog.every(item => profile.LastKnownBoughtExpansionsAnyPlatform.includes(item.anyPlatformId))) return false;
   const root = profile.ExpansionPackOwnershipByPlatform;
   if (!isPlainObject(root)) return false;
   for (const platform of selectedPlatforms) {
     const node = root[platform];
     if (!isPlainObject(node) || !Array.isArray(node.Entries)) return false;
-    for (const item of DLC_CATALOG) {
+    for (const item of catalog) {
       const expected = item.entitlements[platform];
       const matches = node.Entries.filter(entry => isPlainObject(entry) && entry.PackName === expected.PackName);
       if (matches.length === 0) return false;
@@ -193,8 +193,8 @@ export function validateOwnershipChanges(before, after, selectedPlatforms, plan)
   return true;
 }
 
-export function summarizePlan(plan, selectedPlatforms) {
-  const addedByDlc = new Map(DLC_CATALOG.map(item => [item.id, { name: item.displayName, sources: [] }]));
+export function summarizePlan(plan, selectedPlatforms, catalog = DLC_CATALOG) {
+  const addedByDlc = new Map(catalog.map(item => [item.id, { name: item.displayName, sources: [] }]));
   for (const addition of plan.anyPlatform) addedByDlc.get(addition.dlcId).sources.push("Any-platform");
   for (const platform of selectedPlatforms) {
     for (const addition of plan.platforms[platform].additions) addedByDlc.get(addition.dlcId).sources.push(platform);
