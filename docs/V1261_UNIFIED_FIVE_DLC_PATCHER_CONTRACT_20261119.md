@@ -1,6 +1,6 @@
-# v1.26.1+ unified DLC Patcher — implementation and acceptance record
+# v1.24.1+ unified DLC Patcher — version-dependent four/five-DLC implementation
 
-**Implementation status: FIVE_DLC_SIX_STANDARD_STOREFRONTS / AUTOMATED_TESTS_PASS / DEVICE_ONLY_NINTENDO_STEAM.**
+**Implementation status: MIN_591 / FOUR_DLC_UNTIL_642 / FIVE_DLC_FROM_643 / SIX_STANDARD_STOREFRONTS / AUTOMATED_TESTS / DEVICE_ONLY_NINTENDO_STEAM.**
 
 This is the current implementation contract. Earlier November 18 preflight documents and any notes about a four-pass catalog or profile-version write ceiling describe superseded intermediate states.
 
@@ -33,9 +33,20 @@ The new `Expansion4PackExpansionPass` row itself has an empty `AssociatedExpansi
 
 ## Version policy
 
-**No lower or upper `GameInfo.Version` gate.** A profile is eligible for processing when the reader successfully validates the known DDV logical schema, the target ownership lists/maps, safe JSON numeric representation and the supported encrypted/plain transport. The version is retained and displayed, not changed. A future version with a changed schema fails structural validation, not an arbitrary version cutoff.
+**Minimum supported public release: v1.24.1, observed save `GameInfo.Version=591`.** Saves with a lower internal version are rejected even if their JSON fields superficially match. There is **no upper version cap**; future profiles must pass structural, numeric and format checks.
 
-The UI displays **v1.26.1+** to indicate the latest supported catalog baseline. This label is not a proof that unexamined future updates have an unchanged schema. Older profiles with the recognized structure are not rejected solely because of the version number.
+| Save `GameInfo.Version` | Catalog applied | Source basis |
+|---|---|---|
+| Below 591 | Rejected | Original minimum v1.24.1 requirement |
+| 591–626 | Four existing DLCs | v1.24.1 baseline and observed v1.25.3 save at 626 |
+| 627–642 | Four existing DLCs, conservatively | No individually verified public build mapping for this gap; do not introduce fifth-pass data |
+| 643 and above | Five DLCs including The Keepsake Sea | Actual v1.26.1 v643 source save, protoDb and native trace |
+
+`GameInfo.InitialVersion` is **not** the selection key. A profile created in an older version but saved by v1.26.1 can have `InitialVersion=518` and `Version=643`; it must use five DLCs.
+
+The UI displays **v1.24.1+** as the overall support range, shows the two catalog ranges and labels The Keepsake Sea as requiring v1.26.1+. Before loading, it lists all possible DLCs with the limitation; after loading it shows precisely the selected four or five. `GameInfo.Version` is never modified by the patcher.
+
+This release-name-to-save-counter mapping is source-grounded at the known endpoints, not asserted for every intermediate integer. When later build evidence arrives, update the mapping if required rather than guessing. A future build with an incompatible Profile schema fails the normal structural/round-trip checks.
 
 ## Strict insert-only semantics
 
@@ -51,15 +62,22 @@ This makes the tool a *local save-data marker editor*. It does not grant marketp
 
 ## User experience
 
-The page shows `v1.26.1+`, auto-renders all five supported DLC titles, and describes the six normal storefronts. Files can be dropped anywhere in the browser page, not just in the central card; a full-viewport overlay indicates a file drag. A persistent **Choose File** button remains available in the heading as well as the initial drop card; a **Change File** button is available after processing. Selection or drop immediately runs the offline patch/check flow and, only when additions exist and verification completes, starts a local download. **Download Again** provides a fallback.
+The page shows `v1.24.1+` and the two DLC eligibility ranges. Before loading, it lists all five possible DLCs with The Keepsake Sea labeled `v1.26.1+`; once loaded, the list switches to the four- or five-DLC catalog selected by the save version. All six normal storefronts are processed. Files can be dropped anywhere in the browser page, not just in the central card; a full-viewport overlay indicates a file drag. A persistent **Choose File** button remains available in the heading as well as the initial drop card; a **Change File** button is available after processing. Selection or drop immediately runs the offline patch/check flow and, only when additions exist and verification completes, starts a local download. **Download Again** provides a fallback.
 
 ## Verification status and limitations
 
 - GitHub CI includes the original v1.25.3 Steam626 observed-key projection and the v1.26.1 real-profile-derived redacted 643 fixture.
-- Node tests cover all five DLCs, all six storefronts, missing records, partial existing records, noncanonical pre-existing values, protected data, no-op, wrong structure, version-independent acceptance, encrypted round-trip, and preservation.
+- Node tests cover the v1.24.1 minimum, four-to-five DLC switch at save version 643, all six storefronts, missing and preexisting records, protected data, no-op, wrong structure, forward schema compatibility, encrypted round-trip, and preservation.
 - Playwright Chromium E2E covers full-page drag-and-drop with overlay, file chooser, auto-download and Download Again, invalid-file no output, no-op no download and no outbound requests.
 - Genuine v1.26.1 original JSON source shape and entitlement fields are independently observed; **the browser tests use synthetic profiles**, not the original private file.
 - **Four non-Switch/Steam platforms are static-evidence only.** Their distinct native binaries, real platform containers, store-service behavior and live in-game reload/sync have not been run. These are disclosed limitations, not universal mandatory blockers for the owner's static-acceptance policy.
 - No direct modification of `main`, no unrequested release or merge. Publication remains a separate decision after reviewing the exact PR HEAD and acceptance record.
 
-For the next update, re-check the original Build ID, IAP product definitions, StoreFrontGroup origin mapping and Profile structure. Continue without an arbitrary version ceiling so long as the schema remains compatible.
+For the next update, re-check the original Build ID, IAP product definitions, StoreFrontGroup origin mapping and Profile structure. Retain the v1.24.1 minimum and source-backed DLC cutover; do not impose an arbitrary future-version ceiling while the schema remains compatible.
+
+
+## Local owner UI preview
+
+Download the tested source archive from the GitHub Actions `browser` job, extract it, and run `preview-local.cmd` on Windows (requires Node.js installed), or execute `npm run preview` in the extracted directory. The preview uses only `127.0.0.1:8765`; it does not require installation of dependencies or access to the game. Open `http://127.0.0.1:8765/` and drop a backed-up profile anywhere on the page. Alternatively `py -3 -m http.server 8765 --bind 127.0.0.1` can serve the same static files.
+
+The browser's encrypted output download is a new local `profile.json`; original source files are not edited. Use expendable backups and stop the local server when inspection is done. Only the user can judge the visual UI appearance and actual game reload; browser E2E is an automated behavioral test, not visual acceptance.
