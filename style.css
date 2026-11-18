@@ -69,8 +69,7 @@ body::after {
 button, input { font: inherit; }
 button { cursor: pointer; }
 button:focus-visible,
-.upload-state:focus-visible,
-.platform-option input:focus-visible + span {
+.upload-state:focus-visible {
   outline: 3px solid rgba(174,233,247,.84);
   outline-offset: 3px;
 }
@@ -215,6 +214,12 @@ h3 {
   font-size: .96rem;
   line-height: 1;
 }
+.platform-scope {
+  margin: 20px 0 0;
+  color: var(--muted-2);
+  font-size: .99rem;
+  line-height: 1.45;
+}
 .workspace-card {
   padding: 0;
   min-height: 360px;
@@ -230,7 +235,8 @@ h3 {
   outline: none;
   transition: background .14s ease;
 }
-.upload-state.dragging { background: rgba(46,70,122,.20); }
+.upload-state.dragging,
+.workspace-card.dragging { background: rgba(46,70,122,.20); border-color: rgba(174,233,247,.72); }
 .drop-symbol {
   width: 52px;
   height: 52px;
@@ -343,55 +349,6 @@ h3 {
   line-height: 1.45;
 }
 
-.platform-fieldset {
-  border: 0;
-  padding: 0;
-  margin: 0 0 24px;
-}
-.platform-fieldset legend {
-  padding: 0;
-  margin-bottom: 13px;
-  color: #d7deeb;
-  font-size: 1.08rem;
-  font-weight: 730;
-}
-.platform-grid {
-  display: grid;
-  grid-template-columns: repeat(3,minmax(0,1fr));
-  gap: 13px;
-}
-.platform-option {
-  display: block;
-  min-width: 0;
-  cursor: pointer;
-}
-.platform-option input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-.platform-option span {
-  min-height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 13px 16px;
-  border: 1px solid rgba(166,185,227,.23);
-  border-radius: 12px;
-  background: rgba(17,35,71,.38);
-  color: #e9edf6;
-  font-size: 1.08rem;
-  font-weight: 700;
-  line-height: 1.25;
-  text-align: center;
-  transition: border-color .14s ease, background .14s ease, color .14s ease;
-}
-.platform-option:hover span { border-color: rgba(208,194,156,.38); }
-.platform-option input:checked + span {
-  border-color: rgba(230,206,149,.72);
-  color: #fff2d1;
-  background: rgba(33,47,82,.48);
-}
 .button {
   appearance: none;
   border: 1px solid transparent;
@@ -484,6 +441,16 @@ h3 {
   border-radius: 14px;
   font-size: 1.16rem;
   letter-spacing: .012em;
+}
+.auto-patch-progress {
+  margin: 0 0 22px;
+  padding: 16px 18px;
+  border: 1px solid rgba(174,233,247,.24);
+  border-radius: 12px;
+  background: rgba(35,55,99,.35);
+  color: var(--cyan-300);
+  font-size: 1.03rem;
+  line-height: 1.45;
 }
 .patch-result {
   margin-top: 8px;
@@ -580,7 +547,6 @@ h3 {
   .support-badge { min-width: auto; padding: 9px 12px; }
 }
 @media (max-width: 560px) {
-  .platform-grid { grid-template-columns: 1fr; }
   .dlc-list { grid-template-columns: 1fr; }
 }
 @media (max-width: 460px) {
