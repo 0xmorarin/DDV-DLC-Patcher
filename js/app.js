@@ -1,82 +1,34 @@
 import { DLC_CATALOG } from "./config.js";
 import { patchProfileBytes } from "./auto-patch.js";
-import { summarizePlan } from "./ownership.js";
 
 const els = {
   workspace: document.getElementById("workspace-card"),
   dlcList: document.getElementById("dlc-list"),
   uploadState: document.getElementById("upload-state"),
   chooseFile: document.getElementById("choose-file"),
-  chooseFileGlobal: document.getElementById("choose-file-global"),
   dropOverlay: document.getElementById("global-drop-overlay"),
   fileInput: document.getElementById("file-input"),
   profileState: document.getElementById("profile-state"),
-  profileName: document.getElementById("profile-name"),
-  inputType: document.getElementById("input-type"),
-  profileVersion: document.getElementById("profile-version"),
-  profileStatus: document.getElementById("profile-status"),
-  playerName: document.getElementById("player-name"),
-  ingameId: document.getElementById("ingame-id"),
-  profileCreated: document.getElementById("profile-created"),
-  profileModified: document.getElementById("profile-modified"),
-  playTime: document.getElementById("play-time"),
-  saveDevice: document.getElementById("save-device"),
   resetFile: document.getElementById("reset-file"),
   progress: document.getElementById("auto-patch-progress"),
   patchResult: document.getElementById("patch-result"),
   resultTitle: document.getElementById("result-title"),
-  resultPlatform: document.getElementById("result-platform"),
-  resultList: document.getElementById("result-list"),
   resultNote: document.getElementById("result-note"),
   downloadAgain: document.getElementById("download-again"),
   inlineError: document.getElementById("inline-error"),
+  errorTitle: document.getElementById("error-title"),
   errorMessage: document.getElementById("error-message")
 };
 
-let state = { output: null };
+let output = null;
 let loadSerial = 0;
 
 function renderDlcList(catalog = DLC_CATALOG) {
   els.dlcList.replaceChildren(...catalog.map(item => {
     const li = document.createElement("li");
-    li.textContent = item.id === "expansion04" ? item.displayName + " (v1.26.1+)" : item.displayName;
+    li.textContent = item.displayName + (item.id === "expansion04" ? " · v1.26.1+" : "");
     return li;
   }));
-}
-
-function formatTimestamp(value) {
-  if (typeof value !== "string" || !value) return "—";
-  const match = value.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})/);
-  if (!match) return value;
-  return `${match[1]} ${match[2]}${value.endsWith("Z") ? " UTC" : ""}`;
-}
-
-function formatPlayTime(minutes) {
-  const value = Number(minutes);
-  if (!Number.isFinite(value) || value < 0) return "—";
-  const hours = Math.floor(value / 60);
-  const mins = Math.floor(value % 60);
-  return `${hours.toLocaleString()}h ${mins}m`;
-}
-
-function formatDevice(info) {
-  if (!info || typeof info !== "object") return "—";
-  const type = typeof info.deviceType === "string" ? info.deviceType : "";
-  if (type === "DeviceType_Switch") return "Nintendo Switch";
-  if (type === "DeviceType_Windows") return "Windows";
-  if (type) return type.replace(/^DeviceType_/, "").replaceAll("_", " ");
-  return typeof info.deviceName === "string" && info.deviceName ? info.deviceName : "—";
-}
-
-function renderProfileDetails(profile) {
-  const gameInfo = profile?.GameInfo ?? {};
-  const player = profile?.Player ?? {};
-  els.playerName.textContent = typeof player.Name === "string" && player.Name ? player.Name : "—";
-  els.ingameId.textContent = typeof gameInfo.LastCustomIdOwner === "string" && gameInfo.LastCustomIdOwner ? `mdc:${gameInfo.LastCustomIdOwner}` : "mdc:—";
-  els.profileCreated.textContent = formatTimestamp(gameInfo.Created);
-  els.profileModified.textContent = formatTimestamp(gameInfo.Modified);
-  els.playTime.textContent = formatPlayTime(player.TimePlayedInMinutes);
-  els.saveDevice.textContent = formatDevice(gameInfo.LastSaveDeviceInfo);
 }
 
 function hideError() {
@@ -85,78 +37,43 @@ function hideError() {
 }
 
 function showError(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  let title = "Could not patch";
+  let note = "No changes made.";
+  if (message.includes("predates DDV v1.24.1")) {
+    title = "Unsupported version";
+    note = "Requires v1.24.1 or later.";
+  } else if (message.includes("validated as a DDV profile") || message.includes("selected file is empty")) {
+    title = "Invalid file";
+    note = "Select a DDV profile.";
+  } else if (message.includes("Drop exactly one")) {
+    title = "One file only";
+    note = "Drop a single profile.";
+  }
+  els.errorTitle.textContent = title;
+  els.errorMessage.textContent = note;
   els.inlineError.classList.remove("hidden");
-  els.errorMessage.textContent = error instanceof Error ? error.message : String(error);
-}
-
-function resetPatchState() {
-  state.output = null;
-  els.patchResult.classList.add("hidden");
-  els.downloadAgain.classList.add("hidden");
-  els.progress.classList.add("hidden");
-  els.resultList.replaceChildren();
-  els.resultPlatform.textContent = "";
-  els.resultNote.textContent = "";
-  hideError();
 }
 
 function resetAll() {
   ++loadSerial;
-  state = { output: null };
+  output = null;
   els.fileInput.value = "";
   els.uploadState.classList.remove("hidden");
   els.profileState.classList.add("hidden");
   els.workspace.classList.remove("dragging");
   els.dropOverlay.classList.add("hidden");
-  resetPatchState();
+  els.progress.classList.add("hidden");
+  els.patchResult.classList.add("hidden");
+  els.downloadAgain.classList.add("hidden");
+  els.resultNote.textContent = "";
+  hideError();
   renderDlcList();
 }
 
-function setProgress(message) {
-  els.progress.textContent = message;
-  els.progress.classList.remove("hidden");
-}
-
-function platformLabel(platform) {
-  return platform === "Nintendo" ? "Nintendo Switch" : platform;
-}
-
-function createResultItem(name, status) {
-  const item = document.createElement("div");
-  item.className = "result-item";
-  const label = document.createElement("span");
-  label.className = "result-name";
-  label.textContent = name;
-  const result = document.createElement("span");
-  result.className = `result-badge${status === "Already present" ? " existing" : ""}`;
-  result.textContent = status;
-  item.append(label, result);
-  return item;
-}
-
-function renderResult(result, automaticDownloadRequested) {
-  const { plan, platforms, totalAdded, status, catalog } = result;
-  const summary = summarizePlan(plan, platforms, catalog);
-  els.resultList.replaceChildren(...summary.map(item =>
-    createResultItem(item.name, item.sources.length ? "Added" : "Already present")));
-  els.resultPlatform.textContent = `Target platforms: ${platforms.map(platformLabel).join(" + ")}`;
-  if (status === "already-patched") {
-    els.resultTitle.textContent = "Already fully patched";
-    els.resultNote.textContent = "Every DLC entry supported by this save version already exists for all six standard storefront groups. Existing records were preserved and no file was downloaded.";
-    els.downloadAgain.classList.add("hidden");
-  } else {
-    els.resultTitle.textContent = "Patched";
-    els.resultNote.textContent = automaticDownloadRequested
-      ? `Added ${totalAdded} missing ownership identifiers without changing existing records. Automatic download requested. If your browser blocked it, select Download Again.`
-      : "Patch validated, but the automatic download could not be started. Select Download Again.";
-    els.downloadAgain.classList.remove("hidden");
-  }
-  els.patchResult.classList.remove("hidden");
-}
-
 function downloadOutput() {
-  if (!state.output) return false;
-  const blob = new Blob([state.output], { type: "application/octet-stream" });
+  if (!output) return false;
+  const blob = new Blob([output], { type: "application/octet-stream" });
   const url = URL.createObjectURL(blob);
   try {
     const anchor = document.createElement("a");
@@ -171,47 +88,42 @@ function downloadOutput() {
   }
 }
 
+function renderResult(result, downloadRequested) {
+  const alreadyPatched = result.status === "already-patched";
+  els.resultTitle.textContent = alreadyPatched ? "Already patched" : "Patched";
+  els.resultNote.textContent = alreadyPatched ? "No changes needed." : downloadRequested ? "" : "Select Download Again.";
+  els.downloadAgain.classList.toggle("hidden", alreadyPatched);
+  els.patchResult.classList.remove("hidden");
+}
+
 async function loadFile(file) {
   resetAll();
   const requestId = loadSerial;
   if (!file) return;
-
-  els.fileInput.value = "";
   els.uploadState.classList.add("hidden");
   els.profileState.classList.remove("hidden");
-  els.profileName.textContent = file.name || "profile";
-  els.inputType.textContent = "Checking file";
-  els.profileVersion.textContent = "—";
-  els.profileStatus.textContent = "Processing";
-  renderProfileDetails(null);
-  setProgress("Reading and validating your DDV profile…");
-
+  els.progress.textContent = "Processing…";
+  els.progress.classList.remove("hidden");
   try {
     if (file.size === 0) throw new Error("The selected file is empty.");
     const raw = new Uint8Array(await file.arrayBuffer());
     if (requestId !== loadSerial) return;
-    setProgress("Applying missing expansion ownership records and validating the result…");
     const result = await patchProfileBytes(raw);
     if (requestId !== loadSerial) return;
-
-    els.inputType.textContent = result.inputType === "plain" ? "Decrypted JSON" : "Encrypted profile";
-    els.profileVersion.textContent = String(result.version);
     renderDlcList(result.catalog);
-    renderProfileDetails(result.profile);
-    els.profileStatus.textContent = result.status === "already-patched" ? "Already patched" : "Complete";
+    output = result.output;
     els.progress.classList.add("hidden");
-    state.output = result.output;
-
-    let downloaded = false;
+    let downloadRequested = false;
     if (result.status === "patched") {
-      try { downloaded = downloadOutput(); } catch {}
+      try {
+        downloadRequested = downloadOutput();
+      } catch {}
     }
-    renderResult(result, downloaded);
+    renderResult(result, downloadRequested);
   } catch (error) {
     if (requestId !== loadSerial) return;
+    output = null;
     els.progress.classList.add("hidden");
-    els.profileStatus.textContent = "Error";
-    state.output = null;
     showError(error);
   }
 }
@@ -229,9 +141,9 @@ els.uploadState.addEventListener("keydown", event => {
     els.fileInput.click();
   }
 });
-els.fileInput.addEventListener("change", () => { void loadFile(els.fileInput.files?.[0]); });
-
-els.chooseFileGlobal.addEventListener("click", () => els.fileInput.click());
+els.fileInput.addEventListener("change", () => {
+  void loadFile(els.fileInput.files?.[0]);
+});
 
 let dragDepth = 0;
 
@@ -272,7 +184,6 @@ document.addEventListener("drop", event => {
     resetAll();
     els.uploadState.classList.add("hidden");
     els.profileState.classList.remove("hidden");
-    els.profileStatus.textContent = "Error";
     showError(new Error("Drop exactly one DDV profile file."));
     return;
   }
@@ -281,6 +192,10 @@ document.addEventListener("drop", event => {
 window.addEventListener("blur", clearDragState);
 els.resetFile.addEventListener("click", resetAll);
 els.downloadAgain.addEventListener("click", () => {
-  try { downloadOutput(); } catch (error) { showError(error); }
+  try {
+    downloadOutput();
+  } catch (error) {
+    showError(error);
+  }
 });
 renderDlcList();
