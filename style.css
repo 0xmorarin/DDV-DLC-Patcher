@@ -589,3 +589,11 @@ h3 {
 @media (max-width: 700px) {
   .hero-actions { justify-content: flex-start; }
 }
+
+.version-scope {
+  margin: 22px 0 0;
+  color: var(--gold-200);
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.5;
+}
