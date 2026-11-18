@@ -56,3 +56,29 @@ jobs:
       - name: Publish
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Verify live public page
+        shell: bash
+        env:
+          PUBLIC_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          set -euo pipefail
+          base="${PUBLIC_URL%/}"
+          for attempt in {1..15}; do
+            if curl --fail --location --silent --show-error --max-time 12 "$base/" -o /tmp/ddv_public.html \
+              && grep -Fq 'class="simple-divider"' /tmp/ddv_public.html \
+              && grep -Fq 'v1.26.1+' /tmp/ddv_public.html \
+              && ! grep -Fq 'id="status-mark"' /tmp/ddv_public.html \
+              && curl --fail --location --silent --show-error --max-time 12 "$base/style.css" -o /tmp/ddv_public.css \
+              && grep -Fq 'royal-nebula.svg' /tmp/ddv_public.css \
+              && curl --fail --location --silent --show-error --max-time 12 "$base/assets/royal-nebula.svg" -o /tmp/ddv_public.svg \
+              && grep -Fq '<svg' /tmp/ddv_public.svg \
+              && curl --fail --location --silent --show-error --max-time 12 "$base/js/config.js" -o /tmp/ddv_public_config.js \
+              && grep -Fq 'MIN_SUPPORTED_PROFILE_VERSION = 591' /tmp/ddv_public_config.js \
+              && grep -Fq 'FIVE_DLC_MIN_PROFILE_VERSION = 643' /tmp/ddv_public_config.js; then
+              echo "PUBLIC LIVE SMOKE PASS: $base/ (v1.26.1+ UI; four/five DLC policy)"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "PUBLIC LIVE SMOKE FAILED: $base/" >&2
+          exit 1
