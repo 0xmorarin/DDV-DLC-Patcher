@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { AUTO_PATCH_PLATFORMS, DLC_CATALOG } from "../js/config.js";
+import { AUTO_PATCH_PLATFORMS, DLC_CATALOG, STANDARD_STOREFRONT_GROUPS } from "../js/config.js";
 import { patchProfileBytes } from "../js/auto-patch.js";
 import { decryptGeneratedProfile, encryptProfile } from "../js/profile.js";
 import { hasTargetEntitlements } from "../js/ownership.js";
@@ -17,7 +17,8 @@ function sample() {
         Entries: [{ PackName: "ResearchSyntheticDeluxe_LeaveUntouched", PackType: "Edition", Type: "Type_Purchased" }],
         PreserveThis: { value: true }
       },
-      SomeOtherPlatform: { Entries: [{ PackName: "Unknown_Existing", PackType: "Other", Type: "Unknown" }] }
+      SomeOtherPlatform: { Entries: [{ PackName: "Unknown_Existing", PackType: "Other", Type: "Unknown" }] },
+      AppleArcade: { Entries: [{ PackName: "UnrelatedArcadeSource", PackType: "Other", Type: "Unknown" }] }
     },
     UnknownProtectedField: { nested: [1, 2, 3] }
   };
@@ -26,6 +27,21 @@ function sample() {
 function asBytes(profile) {
   return new TextEncoder().encode(JSON.stringify(profile));
 }
+
+test("standard cross-save uses one Profile codec; AppleArcade is never a patch target", async () => {
+  assert.deepEqual([...STANDARD_STOREFRONT_GROUPS], ["Nintendo", "Steam", "Epic", "Microsoft", "Sony", "Apple"]);
+  assert.ok(!STANDARD_STOREFRONT_GROUPS.includes("AppleArcade"));
+  assert.ok(!AUTO_PATCH_PLATFORMS.includes("AppleArcade"));
+  assert.ok(AUTO_PATCH_PLATFORMS.every(group => STANDARD_STOREFRONT_GROUPS.includes(group)));
+  const original = sample();
+  const result = await patchProfileBytes(asBytes(original));
+  const decoded = await decryptGeneratedProfile(result.output);
+  assert.deepEqual(decoded.ExpansionPackOwnershipByPlatform.AppleArcade, original.ExpansionPackOwnershipByPlatform.AppleArcade);
+  assert.equal(result.plan.platforms.AppleArcade, undefined);
+  const repeated = await patchProfileBytes(result.output);
+  assert.equal(repeated.status, "already-patched");
+  assert.equal(repeated.output, null);
+});
 
 test("drag-file workflow patches every verified platform without user choice", async () => {
   const original = sample();
@@ -93,7 +109,7 @@ test("malformed and outdated saves fail closed", async () => {
 });
 
 test("automatic pipeline does not allow duplicate, unsupported or empty platform overrides", async () => {
-  for (const selection of [[], ["Nintendo", "Nintendo"], ["Epic"], ["Steam", "Unknown"]]) {
+  for (const selection of [[], ["Nintendo", "Nintendo"], ["Epic"], ["AppleArcade"], ["Steam", "Unknown"]]) {
     await assert.rejects(() => patchProfileBytes(asBytes(sample()), selection), /Unsupported or duplicate/);
   }
 });
