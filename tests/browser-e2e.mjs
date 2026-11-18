@@ -17,7 +17,7 @@ const contentTypes = {
 
 function sample() {
   return {
-    GameInfo: { InitialVersion: 591, Version: 626, ProfileUID: "puid_browser_synthetic", Revision: 1 },
+    GameInfo: { InitialVersion: 591, Version: 643, ProfileUID: "puid_browser_synthetic", Revision: 1 },
     Player: { Name: "Browser fixture", ContainerInventories: {}, CurrencyAmounts: {}, Cookbook: {} },
     World: { Villages: [], Characters: [], GridCollection: {}, QuestInfo: {} },
     LastKnownBoughtExpansionsAnyPlatform: ["SyntheticUnknownExpansion"],
@@ -109,7 +109,7 @@ try {
   assert.equal(await page.locator("#choose-file-global").count(), 1);
   assert.equal(await page.locator("#choose-file-global").isVisible(), true);
   assert.equal(await page.locator("#global-drop-overlay").count(), 1);
-  assert.equal(await page.locator(".support-badge").textContent(), "v1.26.1+");
+  assert.equal(await page.locator(".support-badge").textContent(), "v1.24.1+");
   assert.equal(await page.locator("#dlc-list li").count(), 5);
   assert.equal(await page.locator("#patch-button").count(), 0);
   const firstDownload = page.waitForEvent("download", { timeout: 20000 });
@@ -156,6 +156,30 @@ try {
   assert.equal(downloads.length, afterDropDownloads);
   assert.equal(await page.locator("#download-again").isVisible(), false);
   assert.equal(await page.locator("#global-drop-overlay").isVisible(), false);
+  await page.locator("#reset-file").click();
+  const legacy = sample();
+  legacy.GameInfo.Version = 626;
+  const legacyDownload = page.waitForEvent("download", { timeout: 20000 });
+  await chooseFile(page, await encryptProfile(legacy));
+  const historical = await legacyDownload;
+  await awaitTitle(page, "Patched");
+  assert.equal(await page.locator("#dlc-list li").count(), 4);
+  assert.equal(await page.locator("#result-list .result-item").count(), 4);
+  assert.equal((await page.locator("#dlc-list").textContent()).includes("The Keepsake Sea"), false);
+  const legacyOutput = await decryptGeneratedProfile(new Uint8Array(await readFile(await historical.path())));
+  assert.equal(legacyOutput.LastKnownBoughtExpansionsAnyPlatform.includes("Expansion04"), false);
+  assert.equal(legacyOutput.ExpansionPackOwnershipByPlatform.Nintendo.Entries.some(entry =>
+    entry.PackName === DLC_CATALOG[4].entitlements.Nintendo.PackName), false);
+  await page.locator("#reset-file").click();
+  assert.equal(await page.locator("#dlc-list li").count(), 5);
+  const legacyDownloads = downloads.length;
+  const tooOld = sample();
+  tooOld.GameInfo.Version = 590;
+  await chooseFile(page, await encryptProfile(tooOld));
+  await page.locator("#inline-error").waitFor({ state: "visible" });
+  assert.match(await page.locator("#error-message").textContent(), /predates DDV v1\\.24\\.1/);
+  await page.waitForTimeout(600);
+  assert.equal(downloads.length, legacyDownloads);
   assert.deepEqual(pageErrors, []);
   assert.deepEqual(outbound, []);
   await context.close();
