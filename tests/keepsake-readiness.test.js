@@ -184,3 +184,23 @@ test("removing unknown existing ownership values is never permitted", () => {
     value.LastKnownBoughtExpansionsAnyPlatform.filter(id => id !== "UnknownExpansion");
   assert.equal(validateOwnershipChanges(before, value, ["Nintendo"], plan), false);
 });
+
+
+test("unknown pre-existing edition-like ownership records are preserved without implying validity", () => {
+  const before = fixture();
+  const editionLike = {
+    PackName: "ResearchSyntheticEdition_DO_NOT_USE_AS_REAL_ID",
+    PackType: "ResearchSyntheticEditionPack",
+    Type: "Type_Purchased"
+  };
+  before.ExpansionPackOwnershipByPlatform.Nintendo.Entries.push(editionLike);
+  const { value, plan } = patched(before, ["Nintendo", "Steam"]);
+  assert.deepEqual(value.ExpansionPackOwnershipByPlatform.Nintendo.Entries[1], editionLike);
+  assert.deepEqual(value.ExpansionPackOwnershipByPlatform.Steam.Entries[0],
+    before.ExpansionPackOwnershipByPlatform.Steam.Entries[0]);
+  assert.equal(validateOwnershipChanges(before, value, ["Nintendo", "Steam"], plan), true);
+  const second = buildPatchPlan(value, ["Nintendo", "Steam"]);
+  assert.equal(second.anyPlatform.length, 0);
+  assert.equal(second.platforms.Nintendo.additions.length, 0);
+  assert.equal(second.platforms.Steam.additions.length, 0);
+});
