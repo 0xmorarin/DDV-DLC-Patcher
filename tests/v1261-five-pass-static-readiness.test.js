@@ -31,7 +31,7 @@ function observedProjection() {
           }
         ]
       },
-      Steam: { Entries: DLC_CATALOG.map(item => ({ ...item.entitlements.Steam })) },
+      Steam: { Entries: DLC_CATALOG.slice(0, 4).map(item => ({ ...item.entitlements.Steam })) },
       AppleArcade: { Entries: [
         { PackName: "ArcadeContent_Existing", PackType: "Other", Type: "Unchanged" }
       ] }
