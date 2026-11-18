@@ -36,10 +36,10 @@ const els = {
 let state = { output: null };
 let loadSerial = 0;
 
-function renderDlcList() {
-  els.dlcList.replaceChildren(...DLC_CATALOG.map(item => {
+function renderDlcList(catalog = DLC_CATALOG) {
+  els.dlcList.replaceChildren(...catalog.map(item => {
     const li = document.createElement("li");
-    li.textContent = item.displayName;
+    li.textContent = item.id === "expansion04" ? item.displayName + " (v1.26.1+)" : item.displayName;
     return li;
   }));
 }
@@ -109,6 +109,7 @@ function resetAll() {
   els.workspace.classList.remove("dragging");
   els.dropOverlay.classList.add("hidden");
   resetPatchState();
+  renderDlcList();
 }
 
 function setProgress(message) {
@@ -134,14 +135,14 @@ function createResultItem(name, status) {
 }
 
 function renderResult(result, automaticDownloadRequested) {
-  const { plan, platforms, totalAdded, status } = result;
-  const summary = summarizePlan(plan, platforms);
+  const { plan, platforms, totalAdded, status, catalog } = result;
+  const summary = summarizePlan(plan, platforms, catalog);
   els.resultList.replaceChildren(...summary.map(item =>
     createResultItem(item.name, item.sources.length ? "Added" : "Already present")));
   els.resultPlatform.textContent = `Target platforms: ${platforms.map(platformLabel).join(" + ")}`;
   if (status === "already-patched") {
     els.resultTitle.textContent = "Already fully patched";
-    els.resultNote.textContent = "Every supported DLC entry already exists for all six standard storefront groups. Existing records were preserved and no file was downloaded.";
+    els.resultNote.textContent = "Every DLC entry supported by this save version already exists for all six standard storefront groups. Existing records were preserved and no file was downloaded.";
     els.downloadAgain.classList.add("hidden");
   } else {
     els.resultTitle.textContent = "Patched";
@@ -195,6 +196,7 @@ async function loadFile(file) {
 
     els.inputType.textContent = result.inputType === "plain" ? "Decrypted JSON" : "Encrypted profile";
     els.profileVersion.textContent = String(result.version);
+    renderDlcList(result.catalog);
     renderProfileDetails(result.profile);
     els.profileStatus.textContent = result.status === "already-patched" ? "Already patched" : "Complete";
     els.progress.classList.add("hidden");
