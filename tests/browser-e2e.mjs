@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
-import { readFile } from "node:fs/promises";
+import { readFile, mkdir } from "node:fs/promises";
 import { extname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
@@ -12,7 +12,8 @@ const root = resolve(fileURLToPath(new URL("../", import.meta.url)));
 const contentTypes = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
-  ".css": "text/css; charset=utf-8"
+  ".css": "text/css; charset=utf-8",
+  ".svg": "image/svg+xml"
 };
 
 function sample() {
@@ -100,11 +101,31 @@ try {
     return route.abort();
   });
   const page = await context.newPage();
+  await page.setViewportSize({ width: 1440, height: 900 });
   const pageErrors = [];
   const downloads = [];
   page.on("pageerror", error => pageErrors.push(error.message));
   page.on("download", download => downloads.push(download));
   await page.goto(origin, { waitUntil: "networkidle" });
+  assert.equal(await page.locator(".royal-seal").count(), 1);
+  assert.equal(await page.locator(".ornament-divider").count(), 1);
+  const background = await page.evaluate(() => getComputedStyle(document.body).backgroundImage);
+  assert.match(background, /royal-nebula\.svg/);
+  const nebula = await page.request.get(origin + "/assets/royal-nebula.svg");
+  assert.equal(nebula.status(), 200);
+  const nebulaMarkup = await nebula.text();
+  assert.ok(nebulaMarkup.includes('feTurbulence'));
+  assert.ok(!nebulaMarkup.includes("<pattern"));
+  await page.evaluate(async () => {
+    const img = new Image();
+    img.src = "./assets/royal-nebula.svg";
+    await img.decode();
+  });
+  await mkdir("ui-preview", { recursive: true });
+  await page.screenshot({ path: "ui-preview/royal-desktop.png", fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: "ui-preview/royal-mobile.png", fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 900 });
   assert.equal(await page.locator("#choose-file").count(), 1);
   assert.equal(await page.locator(".card").count(), 1);
   assert.equal(await page.locator(".profile-details").count(), 0);
@@ -113,7 +134,7 @@ try {
   assert.equal(await page.locator(".version-scope").count(), 0);
   assert.equal(await page.locator(".platform-scope").count(), 0);
   assert.equal(await page.locator("#global-drop-overlay").count(), 1);
-  assert.equal(await page.locator(".support-badge").textContent(), "v1.24.1+");
+  assert.equal(await page.locator(".support-badge").textContent(), "v1.26.1+");
   assert.equal(await page.locator("#dlc-list li").count(), 5);
   assert.equal(await page.locator("#patch-button").count(), 0);
   const firstDownload = page.waitForEvent("download", { timeout: 20000 });
@@ -172,6 +193,7 @@ try {
   const historical = await legacyDownload;
   await awaitTitle(page, "Patched");
   assert.equal(await page.locator("#dlc-list li").count(), 4);
+  assert.equal(await page.locator(".support-badge").textContent(), "v1.26.1+");
   assert.equal(await page.locator("#result-list").count(), 0);
   assert.equal((await page.locator("#dlc-list").textContent()).includes("The Keepsake Sea"), false);
   const legacyOutput = await decryptGeneratedProfile(new Uint8Array(await readFile(await historical.path())));
