@@ -1,0 +1,10 @@
+exclude:
+  - .github/
+  - docs/
+  - tests/
+  - tools/
+  - README.md
+  - package.json
+  - preview-local.cmd
+  - .gitignore
+  - .gitattributes
