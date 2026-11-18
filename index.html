@@ -23,13 +23,14 @@
 <span class="section-label">Supported DLCs</span>
 <ul id="dlc-list" class="dlc-list"></ul>
 </div>
+<p class="platform-scope">Automatic patching covers all verified platforms: Nintendo Switch and Steam. Other platform formats are under validation.</p>
 <p class="offline-note"><span aria-hidden="true">✦</span><span>For offline use only. Online DLC ownership checks will overwrite these changes.</span></p>
 </section>
 <section id="workspace-card" class="card workspace-card">
-<div id="upload-state" class="upload-state" tabindex="0" role="button" aria-label="Choose a DDV profile file">
+<div id="upload-state" class="upload-state" tabindex="0" role="button" aria-label="Drop or choose a DDV profile to patch automatically">
 <div class="drop-symbol" aria-hidden="true">↓</div>
 <h2>Drop your DDV profile here</h2>
-<p>or choose a file from your device</p>
+<p>Automatic patch and download. No extra steps.</p>
 <button id="choose-file" class="button secondary" type="button">Choose File</button>
 <input id="file-input" type="file" hidden>
 </div>
@@ -40,7 +41,7 @@
 <h2 id="profile-name">profile</h2>
 <div class="profile-state-line">
 <span id="input-type" class="state-chip">Encrypted profile</span>
-<span id="profile-status" class="state-chip status-chip">Ready</span>
+<span id="profile-status" class="state-chip status-chip">Processing</span>
 <span id="ingame-id" class="state-chip id-chip">mdc:—</span>
 </div>
 </div>
@@ -72,24 +73,7 @@
 <strong id="save-device" class="detail-value">—</strong>
 </div>
 </div>
-<fieldset class="platform-fieldset">
-<legend>Target platform</legend>
-<div class="platform-grid">
-<label class="platform-option">
-<input type="radio" name="platform" value="switch" checked>
-<span>Nintendo Switch</span>
-</label>
-<label class="platform-option">
-<input type="radio" name="platform" value="steam">
-<span>Steam</span>
-</label>
-<label class="platform-option">
-<input type="radio" name="platform" value="both">
-<span>Switch + Steam</span>
-</label>
-</div>
-</fieldset>
-<button id="patch-button" class="button primary wide" type="button">Patch &amp; Download</button>
+<div id="auto-patch-progress" class="auto-patch-progress hidden" role="status" aria-live="polite">Reading and validating your DDV profile…</div>
 <div id="patch-result" class="patch-result hidden">
 <div class="result-heading">
 <div>
