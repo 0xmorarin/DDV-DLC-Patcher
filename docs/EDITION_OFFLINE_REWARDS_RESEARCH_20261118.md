@@ -47,7 +47,7 @@ This study is separate from identifying the new Keepsake Sea expansion access ID
 
 ## 2026-11-18 v1.25.3 native static audit: concrete outcome
 
-Original v1.25.3 Switch NSO and IL2CPP metadata have now been examined with verified decompressed-segment hashes, direct ARM64 BL cross-references, and actual field loads (not only method names). Full annotated AArch64 evidence and reproducible local scripts are retained separately in the private DDVRENX research package, not copied into this public Patcher repository.
+Original v1.25.3 Switch NSO and IL2CPP metadata have now been examined with verified decompressed-segment hashes, direct ARM64 BL cross-references, and actual field loads (not only method names). Detailed AArch64 instruction-window evidence and reproducible local scripts are retained separately in the private DDVRENX research package, not copied into this public Patcher repository.
 
 - `IAPType.ExpansionPack` and `IAPType.ConsumableEditionPack` are distinct native enum values (2 and 4).
 - `Profile.HasEditionOrEquivalentOwnership` is called by `GetPurchasablePacksForExpansion` in the purchase-availability chain, reachable from Premium Shop models. It scans related existing platform ownership entries. The observed native filter skips ordinary ExpansionPack entries and family-sharing entries; a matching non-ExpansionPack / non-family-sharing entry can change the shop's edition-equivalence result.
