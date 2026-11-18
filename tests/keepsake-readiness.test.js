@@ -168,3 +168,19 @@ test("synthetic minimal DDV profile encrypts and decrypts with ownership data in
   assert.equal(loaded.inputType, "encrypted");
   assert.deepEqual(loaded.profile, value);
 });
+
+
+test("an unexpected any-platform identifier is not accepted as part of a patch", () => {
+  const before = fixture();
+  const { value, plan } = patched(before, ["Nintendo"]);
+  value.LastKnownBoughtExpansionsAnyPlatform.push("UnapprovedExpansion");
+  assert.equal(validateOwnershipChanges(before, value, ["Nintendo"], plan), false);
+});
+
+test("removing unknown existing ownership values is never permitted", () => {
+  const before = fixture();
+  const { value, plan } = patched(before, ["Nintendo"]);
+  value.LastKnownBoughtExpansionsAnyPlatform =
+    value.LastKnownBoughtExpansionsAnyPlatform.filter(id => id !== "UnknownExpansion");
+  assert.equal(validateOwnershipChanges(before, value, ["Nintendo"], plan), false);
+});
