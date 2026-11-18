@@ -88,7 +88,7 @@ try {
   const prepatched = await patchProfileBytes(raw);
   assert.equal(prepatched.status, "patched");
   const complete = prepatched.output;
-  browser = await chromium.launch({ headless: true });
+  browser = await chromium.launch({ headless: true, ...(process.env.CI ? { channel: "chrome" } : {}) });
   const context = await browser.newContext({ acceptDownloads: true });
   const outbound = [];
   await context.route("**/*", route => {
