@@ -35,7 +35,7 @@ test("PRE-RELEASE GATE: only four evidence-backed DLC definitions are active", (
 });
 
 test("automatic patching targets all currently verified platforms without a user mode selector", () => {
-  assert.deepEqual([...AUTO_PATCH_PLATFORMS], ["Nintendo", "Steam"]);
+  assert.deepEqual([...AUTO_PATCH_PLATFORMS], ["Nintendo", "Steam", "Epic", "Microsoft", "Sony", "Apple"]);
   assert.equal(new Set(AUTO_PATCH_PLATFORMS).size, AUTO_PATCH_PLATFORMS.length);
   assert.ok(DLC_CATALOG.every(item => AUTO_PATCH_PLATFORMS.every(platform => item.entitlements[platform])));
 });
