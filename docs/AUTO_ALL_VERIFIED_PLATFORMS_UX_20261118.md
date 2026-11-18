@@ -1,0 +1,32 @@
+> **Current status (2026-11-18, original-native recheck):** This document predates the verified AArch64 and original-protobuf proof. The Draft PR now activates the six standard groups for the four original DLCs. Original `main.elf`, `stringliteral.json`, `dump.cs` and Switch `protoDb.bin` establish the common storefront selection, map key, exact `PackName` assembly and purchased type. Hardware/runtime on Epic/Microsoft/Sony/Apple remains untested; the patch has not merged to main. See [original-native proof](NATIVE_SIX_STORE_OWNERSHIP_PROOF_V1_25_3_20261118.md). Historical two-store-only and unconfirmed-key language below is superseded.
+
+# Automatic all-verified-platform DLC patch workflow (2026-11-18)
+
+**Owner UX decision:** no per-platform selection; no Patch button. One file drop / Choose File invokes the complete operation automatically.
+
+## Implemented Draft PR behavior
+
+1. Input file chosen or dropped (exactly one) -> read -> validate/decrypt with existing DDV profile codec (plain JSON and AES-encrypted supported).
+2. Validate `GameInfo.Version >= 591` and all required profile safety fields. No network calls.
+3. Build a single patch plan for `AUTO_PATCH_PLATFORMS`. This is a **versioned allowlist of verified save-writing targets**, not the number of marketplace groups seen in IAP data.
+4. If no additions: report **Already fully patched** for every currently supported DLC on all currently verified target platforms. No re-encryption, no generated output or download.
+5. If additions: clone input; add missing expansion IDs and platform entries only; validate allowed changes, protected-profile SHA-256, encrypt, decrypt, and validate full round-trip. Request automatic browser download of `profile.json`.
+6. If browser blocks download: **Download Again** remains available. **Change File** and keyboard-friendly **Choose File** are preserved.
+7. Any unsupported schema, contradictory existing entitlement or round-trip mismatch fails closed, without generating a patched file. A `loadSerial` guard prevents stale concurrent tasks from downloading after switching inputs.
+8. The current product catalog includes the four original v1.25.3 expansion passes. The November 18, 2026 `The Keepsake Sea` pass remains **evidence-gated** and cannot be claimed to be covered until actual new-build IDs and entries have been extracted.
+
+## Verification boundaries
+
+- **One logical cross-save Profile schema** for all standard editions; do not require a separate game save schema for each marketplace. Store-specific ownership entries are different keys *inside* the same Profile.
+- Standard marketplace groups: `Nintendo`, `Steam`, `Epic`, `Microsoft` (Xbox/Microsoft Store), `Sony` (PS4/PS5), `Apple` (standard Mac App Store). This complete six-group registry is `STANDARD_STOREFRONT_GROUPS`; the current original-native-evidenced **write allowlist** contains all six standard storefront groups.
+- New storefront writers require exact `IAPData.get_KeyFriendlyId` strings and observed or independently proven ownership behavior, **not** platform-specific logical save-schema verification. The physical console export/encryption wrapper remains a separate transport question.
+- **Explicit exclusion:** `AppleArcade` is a separate edition with expansions/adventure packs bundled by default and its own cross-save ecosystem; the DLC ownership patch has no purpose there. Keep it out of both the storefront registry and the writer.
+- Deluxe/Ultimate edition purchases and online premium grants are not edited.
+- Neither a local save ownership marker nor a patcher success message asserts purchased storefront entitlement, online verification, or cross-buy.
+- Chromium Playwright browser E2E passed on GitHub Actions using synthetic encrypted profiles on November 18, 2026: file chooser, drag and drop, automatic download, Download Again, no-op, malformed input, and local-only network. This does not validate browser handling of the original private save, physical-platform file transport, or offline device reload.
+
+## Regression evidence
+
+Run `npm test` on the draft branch and `node tests/browser-e2e.mjs` with Playwright and Chrome available. Automated tests cover all six statically evidenced platform groups, partial additions, all-owned skip, encrypted input, idempotency, protected fields, retained edition-like records, unsupported structures, contradiction errors, and HTML removal of legacy controls.
+
+**Release gate:** Re-run CI on final new DLC Build; validate new catalog keys and reconfirm the six existing storefront contracts on the updated build before release; do not invent separate save structures. Preserve main until ready.

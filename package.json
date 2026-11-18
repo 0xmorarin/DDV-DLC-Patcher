@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "preview": "node tools/local-preview-server.mjs",
+    "test": "node --check js/app.js && node --check js/auto-patch.js && node --check tools/inspect-ownership-evidence.mjs && node --check tools/inspect-protodb-iap.mjs && node --check tools/verify-native-six-store.mjs && node --check tools/verify-native-six-store-v1261.mjs && node --test tests/*.test.js"
+  }
+}
