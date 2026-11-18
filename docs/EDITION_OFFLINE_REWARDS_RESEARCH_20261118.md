@@ -43,3 +43,17 @@ F. If edition records measurably affect legitimate offline UX or companion/quest
 PENDING: Actual verified edition ownership records, IAP local flag values and paired offline experimental results. Therefore no edition writes have been enabled and the draft PR must not be merged based on this document.
 
 This study is separate from identifying the new Keepsake Sea expansion access ID. It is also separate from direct item GetAll ownership and server-granted premium currency.
+
+
+## 2026-11-18 v1.25.3 native static audit: concrete outcome
+
+Original v1.25.3 Switch NSO and IL2CPP metadata have now been examined with verified decompressed-segment hashes, direct ARM64 BL cross-references, and actual field loads (not only method names). Full annotated AArch64 evidence and reproducible local scripts are retained separately in the private DDVRENX research package, not copied into this public Patcher repository.
+
+- `IAPType.ExpansionPack` and `IAPType.ConsumableEditionPack` are distinct native enum values (2 and 4).
+- `Profile.HasEditionOrEquivalentOwnership` is called by `GetPurchasablePacksForExpansion` in the purchase-availability chain, reachable from Premium Shop models. It scans related existing platform ownership entries. The observed native filter skips ordinary ExpansionPack entries and family-sharing entries; a matching non-ExpansionPack / non-family-sharing entry can change the shop's edition-equivalence result.
+- This proves a **conditional local shop-listing/ownership-equivalence effect**. It does not prove delivery of any DLC edition cosmetics, Moonstones, dedicated quests, or adventure companions.
+- A separate `AutoRedeemFoundersPack` service request includes installed entitlements, marketplace and founder-pack unique names; the cloud-side redemption state machine references PlayFab user/inventory/grant operations. `TrackClaimedFoundersPack` records history, not evidence of a local reward grant.
+- `IAPData.IsLocalEntitlement` and `OwnershipCheckRequired` have verified native field offsets, but their actual Boolean values for any target Deluxe package remain **unavailable** without original serialized IAP instances. The new Keepsake Sea reward path also requires new-build verification.
+- The current public patcher must NOT insert guessed edition IDs, receipts, grant histories, or a `PackType=ExpansionPack` record as a substitute for a distinct edition entry.
+
+**Decision:** A separate opt-in Edition mode is technically motivated because edition ownership can affect shop state. Actual writing, edition entitlement IDs and any claim of offline rewards remain evidence-gated. The mainline four-DLC catalog and the PR's Draft state remain unchanged.
