@@ -4,6 +4,9 @@ on:
   pull_request:
     paths:
       - "js/**"
+      - "assets/**"
+      - "index.html"
+      - "style.css"
       - "tests/**"
       - "tools/**"
       - "package.json"
@@ -45,6 +48,8 @@ jobs:
           name: ddv-patcher-local-source
           path: |
             js/
+            assets/
+            ui-preview/
             tests/
             tools/
             index.html
