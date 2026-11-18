@@ -1,4 +1,4 @@
-import { AUTO_PATCH_PLATFORMS } from "./config.js";
+import { AUTO_PATCH_PLATFORMS, catalogForProfileVersion } from "./config.js";
 import { applyPatchPlan, buildPatchPlan } from "./ownership.js";
 import { decryptGeneratedProfile, encryptProfile, loadProfile, validateProfileVersion } from "./profile.js";
 import { protectedFingerprint, validatePatchedProfile, validateRoundTrip } from "./validator.js";
@@ -12,25 +12,26 @@ export async function patchProfileBytes(raw, platforms = AUTO_PATCH_PLATFORMS) {
 
   const { profile, inputType } = await loadProfile(raw);
   const version = validateProfileVersion(profile);
+  const catalog = catalogForProfileVersion(version);
   const before = structuredClone(profile);
-  const plan = buildPatchPlan(before, platforms);
+  const plan = buildPatchPlan(before, platforms, catalog);
   const totalAdded = plan.anyPlatform.length +
     Object.values(plan.platforms).reduce((sum, entry) => sum + entry.additions.length, 0);
 
   if (totalAdded === 0) {
     return { status: "already-patched", profile: before, inputType, version,
-      platforms: platforms.slice(), plan, totalAdded, output: null };
+      platforms: platforms.slice(), catalog, plan, totalAdded, output: null };
   }
 
   const protectedHash = await protectedFingerprint(before);
   const after = structuredClone(before);
   applyPatchPlan(after, plan);
-  await validatePatchedProfile(before, after, platforms, plan, protectedHash);
+  await validatePatchedProfile(before, after, platforms, plan, protectedHash, catalog);
 
   const output = await encryptProfile(after);
   const decoded = await decryptGeneratedProfile(output);
-  await validateRoundTrip(after, decoded, before, platforms, plan, protectedHash);
+  await validateRoundTrip(after, decoded, before, platforms, plan, protectedHash, catalog);
 
   return { status: "patched", profile: before, inputType, version,
-    platforms: platforms.slice(), plan, totalAdded, output };
+    platforms: platforms.slice(), catalog, plan, totalAdded, output };
 }
