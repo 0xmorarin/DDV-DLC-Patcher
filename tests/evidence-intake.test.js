@@ -52,7 +52,7 @@ test("ownership projection redacts player details, unknown edition values and al
   const result = projectOwnershipEvidence(input);
   const report = JSON.stringify(result);
   assert.equal(result.GameInfoVersion, 626);
-  assert.equal(result.exceedsVerifiedWriterVersion, false);
+  assert.equal("exceedsVerifiedWriterVersion" in result, false);
   assert.deepEqual(result.anyPlatformIds, ["Expansion01", "WinnieDLC"]);
   assert.deepEqual(Object.keys(result.platforms), ["Nintendo", "Steam"]);
   assert.equal(result.platforms.Nintendo.expansionEntries.length, 1);
@@ -79,7 +79,7 @@ test("two matching profiles show only observed additions and removals, not infer
   const result = compareOwnershipEvidence(before, after);
   assert.deepEqual(result.changes.anyPlatformAdded, ["Expansion04"]);
   assert.deepEqual(result.changes.anyPlatformRemoved, []);
-  assert.equal(result.after.exceedsVerifiedWriterVersion, true);
+  assert.equal(result.after.GameInfoVersion, 627);
   assert.deepEqual(result.changes.platformChanges.Nintendo.added, [{
     PackName: "KeepsakeExpansionPass_Nintendo_OnlineKey",
     PackType: "ExpansionPack", Type: "Type_Purchased"
