@@ -1,3 +1,4 @@
+import { DLC_CATALOG } from "./config.js";
 import { deepEqual, hasTargetEntitlements, validateOwnershipChanges } from "./ownership.js";
 
 function stableStringify(value) {
@@ -22,13 +23,13 @@ export async function protectedFingerprint(profile) {
   return sha256(stableStringify(protectedObject(profile)));
 }
 
-export async function validatePatchedProfile(before, after, selectedPlatforms, plan, protectedHash) {
-  if (!hasTargetEntitlements(after, selectedPlatforms)) throw new Error("Required expansion ownership records were not found after patching.");
+export async function validatePatchedProfile(before, after, selectedPlatforms, plan, protectedHash, catalog = DLC_CATALOG) {
+  if (!hasTargetEntitlements(after, selectedPlatforms, catalog)) throw new Error("Required expansion ownership records were not found after patching.");
   if (!validateOwnershipChanges(before, after, selectedPlatforms, plan)) throw new Error("DLC ownership data changed outside the allowed patch plan.");
   if (await protectedFingerprint(after) !== protectedHash) throw new Error("Data outside the DLC ownership fields changed unexpectedly.");
 }
 
-export async function validateRoundTrip(expected, decoded, before, selectedPlatforms, plan, protectedHash) {
+export async function validateRoundTrip(expected, decoded, before, selectedPlatforms, plan, protectedHash, catalog = DLC_CATALOG) {
   if (!deepEqual(expected, decoded)) throw new Error("The encrypted profile did not round-trip to the expected patched data.");
-  await validatePatchedProfile(before, decoded, selectedPlatforms, plan, protectedHash);
+  await validatePatchedProfile(before, decoded, selectedPlatforms, plan, protectedHash, catalog);
 }
