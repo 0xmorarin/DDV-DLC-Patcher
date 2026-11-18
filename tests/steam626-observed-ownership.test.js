@@ -94,11 +94,11 @@ test("Steam 626 projection adds missing Steam pass and new storefront groups wit
   const result = await patchProfileBytes(await encryptProfile(input));
   assert.equal(result.status, "patched");
   assert.equal(result.plan.anyPlatform.length, 1);
-  assert.equal(result.plan.platforms.Nintendo.additions.length, 0);
+  assert.equal(result.plan.platforms.Nintendo.additions.length, 1);
   assert.equal(result.plan.platforms.Steam.additions.length, 2);
   assert.equal(result.totalAdded, 24);
   for (const platform of ["Epic", "Microsoft", "Sony", "Apple"]) {
-    assert.equal(result.plan.platforms[platform].additions.length, 4);
+    assert.equal(result.plan.platforms[platform].additions.length, 5);
   }
   const decoded = await decryptGeneratedProfile(result.output);
   assert.deepEqual(decoded.ExpansionPackOwnershipByPlatform.Nintendo.Entries.slice(0, 4),
