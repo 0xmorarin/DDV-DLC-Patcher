@@ -60,9 +60,9 @@ async function awaitTitle(page, title) {
     !document.getElementById("patch-result")?.classList.contains("hidden"), title);
 }
 
-async function chooseFile(page, bytes, name = "profile.json") {
+async function chooseFile(page, bytes, name = "profile.json", selector = "#choose-file") {
   const chooser = page.waitForEvent("filechooser");
-  await page.locator("#choose-file").click();
+  await page.locator(selector).click();
   const fileChooser = await chooser;
   await fileChooser.setFiles({
     name,
@@ -139,6 +139,10 @@ try {
   assert.equal(await page.locator("#download-again").isVisible(), false);
   await page.waitForTimeout(600);
   assert.equal(downloads.length, downloadCount);
+  const persistentChooserDownload = page.waitForEvent("download", { timeout: 20000 });
+  await chooseFile(page, raw, "profile.json", "#choose-file-global");
+  assert.equal((await persistentChooserDownload).suggestedFilename(), "profile.json");
+  await awaitTitle(page, "Patched");
   await page.locator("#reset-file").click();
   const droppedDownload = page.waitForEvent("download", { timeout: 20000 });
   await dropFile(page, raw);
