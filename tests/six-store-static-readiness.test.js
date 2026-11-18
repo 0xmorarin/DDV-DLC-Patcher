@@ -12,7 +12,7 @@ const extra = ["Epic", "Microsoft", "Sony", "Apple"];
 
 function fixture() {
   return {
-    GameInfo: { InitialVersion: 518, Version: 626, ProfileUID: "puid_six_store_synthetic", Revision: 1 },
+    GameInfo: { InitialVersion: 518, Version: 643, ProfileUID: "puid_six_store_synthetic", Revision: 1 },
     Player: { Name: "Six-store fixture", ContainerInventories: {}, CurrencyAmounts: {}, Cookbook: {} },
     World: { Villages: [], Characters: [], GridCollection: {}, QuestInfo: {} },
     LastKnownBoughtExpansionsAnyPlatform: ["UnknownPriorExpansion"],
