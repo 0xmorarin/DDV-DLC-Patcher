@@ -1,5 +1,7 @@
 # v1.26.1 exact-native DLC ownership evidence — six ordinary stores
 
+**Implementation update (2026-11-19):** The fifth pass and all six normal storefronts are now active on Draft PR #1. The old 626 version ceiling was removed; current policy is structural profile validation and insert-only ownership records. Earlier statements below about future-only candidates or the version ceiling describe the pre-activation stage. See [the current implementation contract](./V1261_UNIFIED_FIVE_DLC_PATCHER_CONTRACT_20261119.md). Original native findings and source hashes remain valid.
+
 **Status: NEW_BUILD_NATIVE_STATIC_VERIFIED; private source evidence retained; independent four-store runtime untested.** This is a new build-specific audit. Do not reuse v1.25.3 RVAs as though the executable were unchanged.
 
 ## Original source identity and integrity
