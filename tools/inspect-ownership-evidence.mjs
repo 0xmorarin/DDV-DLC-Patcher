@@ -2,7 +2,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadProfile } from "../js/profile.js";
-import { MAX_VERIFIED_PROFILE_VERSION, STANDARD_STOREFRONT_GROUPS } from "../js/config.js";
+import { STANDARD_STOREFRONT_GROUPS } from "../js/config.js";
 
 const safeIdentifier = /^[A-Za-z][A-Za-z0-9_]{0,95}$/;
 const safeStorefront = /^[A-Za-z][A-Za-z0-9_]{0,31}$/;
@@ -82,7 +82,6 @@ export function projectOwnershipEvidence(profile) {
     GameInfoVersion: profile.GameInfo.Version,
     GameInfoInitialVersion: Number.isInteger(profile.GameInfo.InitialVersion)
       ? profile.GameInfo.InitialVersion : null,
-    exceedsVerifiedWriterVersion: profile.GameInfo.Version > MAX_VERIFIED_PROFILE_VERSION,
     anyPlatformIds: sortStrings(anyPlatformIds),
     platforms
   };
