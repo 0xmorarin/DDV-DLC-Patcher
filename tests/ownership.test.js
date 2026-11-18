@@ -18,7 +18,7 @@ function fixture() {
 }
 
 test("existing catalog keys remain registered", () => {
-  for (const key of ["Expansion01", "Expansion02", "Expansion03", "WinnieDLC"]) {
+  for (const key of ["Expansion01", "Expansion02", "Expansion03", "WinnieDLC", "Expansion04"]) {
     assert.ok(DLC_CATALOG.some(item => item.anyPlatformId === key), key);
   }
 });
@@ -69,7 +69,7 @@ test("preowned DLC is not duplicated", () => {
   assert.equal(validateOwnershipChanges(before, after, ["Nintendo"], plan), true);
 });
 
-test("invalid ownership schema and contradictory records fail closed", () => {
+test("invalid schema is rejected and existing noncanonical records are left untouched", () => {
   const badSchema = fixture();
   badSchema.LastKnownBoughtExpansionsAnyPlatform.push(123);
   assert.throws(() => buildPatchPlan(badSchema, ["Nintendo"]));
@@ -78,5 +78,11 @@ test("invalid ownership schema and contradictory records fail closed", () => {
     ...DLC_CATALOG[0].entitlements.Nintendo,
     Type: "Type_Contradictory"
   });
-  assert.throws(() => buildPatchPlan(conflict, ["Nintendo"]));
+  const plan = buildPatchPlan(conflict, ["Nintendo"]);
+  assert.equal(plan.platforms.Nintendo.additions.length, DLC_CATALOG.length - 1);
+  const after = structuredClone(conflict);
+  applyPatchPlan(after, plan);
+  assert.deepEqual(after.ExpansionPackOwnershipByPlatform.Nintendo.Entries[1],
+    conflict.ExpansionPackOwnershipByPlatform.Nintendo.Entries[1]);
+  assert.equal(validateOwnershipChanges(conflict, after, ["Nintendo"], plan), true);
 });
