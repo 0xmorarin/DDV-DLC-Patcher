@@ -45,3 +45,14 @@ Official platform, cross-save, cross-buy and Arcade context:
 - https://gameloft.helpshift.com/hc/en/78-disney-dreamlight-valley-apple-arcade/faq/3564-how-is-disney-dreamlight-valley-arcade-edition-different-from-buying-disney-dreamlight-valley-on-the-mac-app-store-or-other-platforms/
 
 **No Patcher runtime code or catalog changed. This PR remains Draft.**
+
+
+## Native save PackName construction — Switch v1.25.3
+
+The actual AArch64 provides stronger support than storefront existence alone:
+
+- `IAPData.get_KeyFriendlyId` RVA `0x03F83410`: native loads `IAPData.UniqueName` (`+0x18`) and the current `StoreFrontGroup.UniqueName` (`+0x18`) from its referenced singleton; the tail at `0x03F8359C` invokes a four-piece string concatenation. The two literal separator/suffix strings were not independently extracted from IL2CPP literal tables.
+- `Profile.ApplyExpansionsOwnershipStatus` at `0x05A201EC` explicitly calls this getter, uses the resulting key to check purchase/online ownership, and assigns the key to `ExpansionPackOwnership.PackName` at `0x05A2044C` under the successful entry-generation branch.
+- Observed existing Nintendo/Steam values match `IAPData.UniqueName + "_" + StoreFrontGroup.UniqueName + "_OnlineKey"`. Therefore equivalent string construction for Microsoft/Sony/Epic/Apple is **strongly indicated**, but each platform's actual save map key, exact runtime branch conditions and reload behavior remain unverified. **Do not enable inferred values as verified support.**
+
+Full reproducible private static audit updated as `DDV_DLC_PATCHER_MULTIPLATFORM_STATIC_RESEARCH_REV2_20261118.zip` in the DDVRENX v1.25.3 analysis folder.
