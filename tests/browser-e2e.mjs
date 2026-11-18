@@ -177,7 +177,7 @@ try {
   tooOld.GameInfo.Version = 590;
   await chooseFile(page, await encryptProfile(tooOld));
   await page.locator("#inline-error").waitFor({ state: "visible" });
-  assert.match(await page.locator("#error-message").textContent(), /predates DDV v1\\.24\\.1/);
+  assert.ok((await page.locator("#error-message").textContent()).includes("predates DDV v1.24.1"));
   await page.waitForTimeout(600);
   assert.equal(downloads.length, legacyDownloads);
   assert.deepEqual(pageErrors, []);
