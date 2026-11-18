@@ -1,4 +1,4 @@
-import { HEX_KEY, MIN_SUPPORTED_PROFILE_VERSION, MAX_VERIFIED_PROFILE_VERSION, ZIP_INNER_NAME } from "./config.js";
+import { HEX_KEY, ZIP_INNER_NAME } from "./config.js";
 import { aes256EcbDecrypt, aes256EcbEncrypt, hexToBytes } from "./aes.js";
 import { createZipEntry, readZipEntry } from "./zip.js";
 
@@ -106,8 +106,7 @@ export async function loadProfile(raw) {
 export function validateProfileVersion(profile) {
   const version = profile?.GameInfo?.Version;
   if (!Number.isInteger(version)) throw new Error("GameInfo.Version could not be read.");
-  if (version < MIN_SUPPORTED_PROFILE_VERSION) throw new Error(`This profile is older than the supported minimum. DDV v1.24.1 or later is required. GameInfo.Version: ${version}`);
-  if (version > MAX_VERIFIED_PROFILE_VERSION) throw new Error(`This profile version is newer than the validated compatibility range. GameInfo.Version: ${version}`);
+  if (version < 0 || !Number.isSafeInteger(version)) throw new Error("GameInfo.Version is not a valid nonnegative safe integer.");
   return version;
 }
 
