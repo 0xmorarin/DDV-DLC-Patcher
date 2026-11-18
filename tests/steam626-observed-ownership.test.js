@@ -46,8 +46,8 @@ function redactedSteam626Projection() {
 test("v1.25.3 Steam 626 observed expansion identifiers match production catalog for both storefronts", () => {
   assert.deepEqual(DLC_CATALOG.map(item => item.anyPlatformId),
     ["Expansion01", "Expansion02", "Expansion03", "WinnieDLC"]);
-  assert.deepEqual([...AUTO_PATCH_PLATFORMS], ["Nintendo", "Steam"]);
-  for (const platform of AUTO_PATCH_PLATFORMS) {
+  assert.deepEqual([...AUTO_PATCH_PLATFORMS], ["Nintendo", "Steam", "Epic", "Microsoft", "Sony", "Apple"]);
+  for (const platform of Object.keys(observedEntitlements)) {
     assert.deepEqual(DLC_CATALOG.map(item => item.entitlements[platform].PackName),
       observedEntitlements[platform]);
     assert.ok(DLC_CATALOG.every(item => item.entitlements[platform].PackType === "ExpansionPack"));
@@ -56,19 +56,36 @@ test("v1.25.3 Steam 626 observed expansion identifiers match production catalog 
   assert.equal(MAX_VERIFIED_PROFILE_VERSION, 626);
 });
 
-test("redacted Steam 626 ownership projection produces no output when both storefronts already contain all four passes", async () => {
+test("redacted Steam 626 projection retains observed original records and adds the other four store groups", async () => {
   const input = redactedSteam626Projection();
   const encrypted = await encryptProfile(input);
   const result = await patchProfileBytes(encrypted);
-  assert.equal(result.status, "already-patched");
+  assert.equal(result.status, "patched");
   assert.equal(result.inputType, "encrypted");
-  assert.equal(result.output, null);
-  assert.equal(result.totalAdded, 0);
   assert.equal(result.plan.anyPlatform.length, 0);
-  assert.ok(Object.values(result.plan.platforms).every(value => value.additions.length === 0));
+  assert.equal(result.plan.platforms.Nintendo.additions.length, 0);
+  assert.equal(result.plan.platforms.Steam.additions.length, 0);
+  for (const platform of ["Epic", "Microsoft", "Sony", "Apple"]) {
+    assert.equal(result.plan.platforms[platform].createNode, true);
+    assert.equal(result.plan.platforms[platform].additions.length, 4);
+  }
+  assert.equal(result.totalAdded, 16);
+  const decoded = await decryptGeneratedProfile(result.output);
+  for (const platform of ["Nintendo", "Steam"]) {
+    assert.deepEqual(decoded.ExpansionPackOwnershipByPlatform[platform],
+      input.ExpansionPackOwnershipByPlatform[platform]);
+  }
+  assert.deepEqual(decoded.LastKnownBoughtExpansionsAnyPlatform,
+    input.LastKnownBoughtExpansionsAnyPlatform);
+  const repeat = await patchProfileBytes(result.output);
+  assert.equal(repeat.status, "already-patched");
+  assert.equal(repeat.output, null);
+  const legacyOnly = await patchProfileBytes(encrypted, ["Nintendo", "Steam"]);
+  assert.equal(legacyOnly.status, "already-patched");
+  assert.equal(legacyOnly.output, null);
 });
 
-test("Steam 626 projection adds only a deleted Steam pass and preserves unrelated and edition-like entries", async () => {
+test("Steam 626 projection adds missing Steam pass and new storefront groups without changing old entries", async () => {
   const input = redactedSteam626Projection();
   input.ExpansionPackOwnershipByPlatform.Steam.Entries.pop();
   const before = structuredClone(input);
@@ -77,6 +94,10 @@ test("Steam 626 projection adds only a deleted Steam pass and preserves unrelate
   assert.equal(result.plan.anyPlatform.length, 0);
   assert.equal(result.plan.platforms.Nintendo.additions.length, 0);
   assert.equal(result.plan.platforms.Steam.additions.length, 1);
+  assert.equal(result.totalAdded, 17);
+  for (const platform of ["Epic", "Microsoft", "Sony", "Apple"]) {
+    assert.equal(result.plan.platforms[platform].additions.length, 4);
+  }
   const decoded = await decryptGeneratedProfile(result.output);
   assert.deepEqual(decoded.ExpansionPackOwnershipByPlatform.Nintendo,
     before.ExpansionPackOwnershipByPlatform.Nintendo);
