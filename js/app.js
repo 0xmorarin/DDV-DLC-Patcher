@@ -7,6 +7,8 @@ const els = {
   dlcList: document.getElementById("dlc-list"),
   uploadState: document.getElementById("upload-state"),
   chooseFile: document.getElementById("choose-file"),
+  chooseFileGlobal: document.getElementById("choose-file-global"),
+  dropOverlay: document.getElementById("global-drop-overlay"),
   fileInput: document.getElementById("file-input"),
   profileState: document.getElementById("profile-state"),
   profileName: document.getElementById("profile-name"),
@@ -105,6 +107,7 @@ function resetAll() {
   els.uploadState.classList.remove("hidden");
   els.profileState.classList.add("hidden");
   els.workspace.classList.remove("dragging");
+  els.dropOverlay.classList.add("hidden");
   resetPatchState();
 }
 
@@ -138,12 +141,12 @@ function renderResult(result, automaticDownloadRequested) {
   els.resultPlatform.textContent = `Target platforms: ${platforms.map(platformLabel).join(" + ")}`;
   if (status === "already-patched") {
     els.resultTitle.textContent = "Already fully patched";
-    els.resultNote.textContent = "Every currently supported expansion pass is already present for all verified target platforms. No changes were made and no file was downloaded.";
+    els.resultNote.textContent = "Every supported DLC entry already exists for all six standard storefront groups. Existing records were preserved and no file was downloaded.";
     els.downloadAgain.classList.add("hidden");
   } else {
     els.resultTitle.textContent = "Patched";
     els.resultNote.textContent = automaticDownloadRequested
-      ? `Validated ${totalAdded} new ownership records. Automatic download requested. If your browser blocked it, select Download Again.`
+      ? `Added ${totalAdded} missing ownership identifiers without changing existing records. Automatic download requested. If your browser blocked it, select Download Again.`
       : "Patch validated, but the automatic download could not be started. Select Download Again.";
     els.downloadAgain.classList.remove("hidden");
   }
@@ -226,19 +229,43 @@ els.uploadState.addEventListener("keydown", event => {
 });
 els.fileInput.addEventListener("change", () => { void loadFile(els.fileInput.files?.[0]); });
 
-for (const eventName of ["dragenter", "dragover"]) {
-  els.workspace.addEventListener(eventName, event => {
-    event.preventDefault();
-    if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
-    els.workspace.classList.add("dragging");
-  });
+els.chooseFileGlobal.addEventListener("click", () => els.fileInput.click());
+
+let dragDepth = 0;
+
+function isFileDrag(event) {
+  return !!event.dataTransfer?.types && Array.from(event.dataTransfer.types).includes("Files");
 }
-els.workspace.addEventListener("dragleave", event => {
-  if (!els.workspace.contains(event.relatedTarget)) els.workspace.classList.remove("dragging");
-});
-els.workspace.addEventListener("drop", event => {
-  event.preventDefault();
+
+function clearDragState() {
+  dragDepth = 0;
+  els.dropOverlay.classList.add("hidden");
   els.workspace.classList.remove("dragging");
+}
+
+document.addEventListener("dragenter", event => {
+  if (!isFileDrag(event)) return;
+  event.preventDefault();
+  dragDepth++;
+  els.dropOverlay.classList.remove("hidden");
+  els.workspace.classList.add("dragging");
+});
+document.addEventListener("dragover", event => {
+  if (!isFileDrag(event)) return;
+  event.preventDefault();
+  if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+  els.dropOverlay.classList.remove("hidden");
+});
+document.addEventListener("dragleave", event => {
+  if (!isFileDrag(event)) return;
+  event.preventDefault();
+  dragDepth = Math.max(0, dragDepth - 1);
+  if (dragDepth === 0) clearDragState();
+});
+document.addEventListener("drop", event => {
+  if (!isFileDrag(event) && !event.dataTransfer?.files?.length) return;
+  event.preventDefault();
+  clearDragState();
   if (event.dataTransfer?.files?.length !== 1) {
     resetAll();
     els.uploadState.classList.add("hidden");
@@ -249,6 +276,7 @@ els.workspace.addEventListener("drop", event => {
   }
   void loadFile(event.dataTransfer.files[0]);
 });
+window.addEventListener("blur", clearDragState);
 els.resetFile.addEventListener("click", resetAll);
 els.downloadAgain.addEventListener("click", () => {
   try { downloadOutput(); } catch (error) { showError(error); }
