@@ -5,46 +5,46 @@ export const HEX_KEY = "62357168683873614A38556C444A557A545A5864325467366D626F38
 export const STANDARD_STOREFRONT_GROUPS = Object.freeze([
   "Nintendo", "Steam", "Epic", "Microsoft", "Sony", "Apple"
 ]);
-export const AUTO_PATCH_PLATFORMS = Object.freeze(["Nintendo", "Steam"]);
+export const AUTO_PATCH_PLATFORMS = STANDARD_STOREFRONT_GROUPS;
+
+function entitlementDefinitions(iapUniqueName) {
+  return Object.fromEntries(STANDARD_STOREFRONT_GROUPS.map(group => [
+    group,
+    {
+      PackName: iapUniqueName + "_" + group + "_OnlineKey",
+      PackType: "ExpansionPack",
+      Type: "Type_Purchased"
+    }
+  ]));
+}
+
 export const DLC_CATALOG = [
   {
     id: "expansion01",
     displayName: "A Rift in Time",
     anyPlatformId: "Expansion01",
     family: "Expansion1Pack",
-    entitlements: {
-      Nintendo: { PackName: "Expansion1PackExpansionPass_Nintendo_OnlineKey", PackType: "ExpansionPack", Type: "Type_Purchased" },
-      Steam: { PackName: "Expansion1PackExpansionPass_Steam_OnlineKey", PackType: "ExpansionPack", Type: "Type_Purchased" }
-    }
+    entitlements: entitlementDefinitions("Expansion1PackExpansionPass")
   },
   {
     id: "expansion02",
     displayName: "The Storybook Vale",
     anyPlatformId: "Expansion02",
     family: "Expansion2Pack",
-    entitlements: {
-      Nintendo: { PackName: "Expansion2PackExpansionPass_Nintendo_OnlineKey", PackType: "ExpansionPack", Type: "Type_Purchased" },
-      Steam: { PackName: "Expansion2PackExpansionPass_Steam_OnlineKey", PackType: "ExpansionPack", Type: "Type_Purchased" }
-    }
+    entitlements: entitlementDefinitions("Expansion2PackExpansionPass")
   },
   {
     id: "expansion03",
     displayName: "Wishblossom Ranch",
     anyPlatformId: "Expansion03",
     family: "Expansion3Pack",
-    entitlements: {
-      Nintendo: { PackName: "Expansion3PackExpansionPass_Nintendo_OnlineKey", PackType: "ExpansionPack", Type: "Type_Purchased" },
-      Steam: { PackName: "Expansion3PackExpansionPass_Steam_OnlineKey", PackType: "ExpansionPack", Type: "Type_Purchased" }
-    }
+    entitlements: entitlementDefinitions("Expansion3PackExpansionPass")
   },
   {
     id: "mini-expansion01",
     displayName: "Honeyglow Woods",
     anyPlatformId: "WinnieDLC",
     family: "MiniExpansion1Pack",
-    entitlements: {
-      Nintendo: { PackName: "MiniExpansion1PackExpansionPass_Nintendo_OnlineKey", PackType: "ExpansionPack", Type: "Type_Purchased" },
-      Steam: { PackName: "MiniExpansion1PackExpansionPass_Steam_OnlineKey", PackType: "ExpansionPack", Type: "Type_Purchased" }
-    }
+    entitlements: entitlementDefinitions("MiniExpansion1PackExpansionPass")
   }
 ];
