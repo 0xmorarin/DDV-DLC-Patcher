@@ -92,6 +92,7 @@ test("Steam 626 projection adds only a deleted Steam pass and preserves unrelate
 test("new save versions are rejected until an explicit compatibility review", async () => {
   const input = redactedSteam626Projection();
   input.GameInfo.Version = 627;
-  await assert.rejects(() => patchProfileBytes(await encryptProfile(input)),
+  const encrypted = await encryptProfile(input);
+  await assert.rejects(() => patchProfileBytes(encrypted),
     /newer than the validated compatibility range/);
 });
