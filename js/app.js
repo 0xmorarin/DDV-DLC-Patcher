@@ -26,7 +26,7 @@ let loadSerial = 0;
 function renderDlcList(catalog = DLC_CATALOG) {
   els.dlcList.replaceChildren(...catalog.map(item => {
     const li = document.createElement("li");
-    li.textContent = item.displayName + (item.id === "expansion04" ? " · v1.26.1+" : "");
+    li.textContent = item.displayName;
     return li;
   }));
 }
