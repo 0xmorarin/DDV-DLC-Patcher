@@ -9,90 +9,37 @@
 </head>
 <body>
 <div class="sky-haze" aria-hidden="true"></div>
-<div id="global-drop-overlay" class="global-drop-overlay hidden" aria-hidden="true"><div class="global-drop-prompt">Drop DDV profile to patch and download</div></div>
+<div id="global-drop-overlay" class="global-drop-overlay hidden" aria-hidden="true"><div class="global-drop-prompt">Drop profile here</div></div>
 <main class="page-shell">
-<section class="card hero">
+<section id="workspace-card" class="card unified-card">
 <div class="title-row">
-<div>
-<p class="eyebrow">Disney Dreamlight Valley</p>
-<h1>DDV DLC Patcher</h1>
+<div class="brand"><p class="eyebrow">Disney Dreamlight Valley</p><h1>DDV DLC Patcher</h1></div>
+<div class="support-badge">v1.24.1+</div>
 </div>
-<div class="hero-actions"><div class="support-badge">v1.24.1+</div><button id="choose-file-global" class="button secondary compact" type="button">Choose File</button></div>
-</div>
-<div class="hero-divider" aria-hidden="true"></div>
 <div class="supported-row">
 <span class="section-label">Supported DLCs</span>
 <ul id="dlc-list" class="dlc-list"></ul>
 </div>
-<p class="version-scope">v1.24.1–v1.25.3: four DLCs. v1.26.1 and later: five DLCs, including The Keepsake Sea. The list adjusts when a profile is loaded.</p>
-<p class="platform-scope">Automatic patching covers six standard storefronts: Nintendo Switch, Steam, Epic, Xbox / Microsoft, PlayStation, and Mac App Store. Epic, Microsoft, Sony and Mac App Store support is verified statically against v1.26.1 game data but has not been device-tested. Apple Arcade is excluded.</p>
-<p class="offline-note"><span aria-hidden="true">✦</span><span>For offline use only. Online DLC ownership checks will overwrite these changes.</span></p>
-</section>
-<section id="workspace-card" class="card workspace-card">
-<div id="upload-state" class="upload-state" tabindex="0" role="button" aria-label="Drop or choose a DDV profile to patch automatically">
+<div id="upload-state" class="upload-state" tabindex="0" role="button" aria-label="Drop or choose a DDV profile">
 <div class="drop-symbol" aria-hidden="true">↓</div>
-<h2>Drop your DDV profile here</h2>
-<p>Automatic patch and download. No extra steps.</p>
+<h2>Drop profile here</h2>
 <button id="choose-file" class="button secondary" type="button">Choose File</button>
 <input id="file-input" type="file" hidden>
 </div>
 <div id="profile-state" class="profile-state hidden">
-<div class="section-heading">
-<div class="profile-title">
-<p class="eyebrow">Profile</p>
-<h2 id="profile-name">profile</h2>
-<div class="profile-state-line">
-<span id="input-type" class="state-chip">Encrypted profile</span>
-<span id="profile-status" class="state-chip status-chip">Processing</span>
-<span id="ingame-id" class="state-chip id-chip">mdc:—</span>
-</div>
-</div>
-<button id="reset-file" class="button ghost compact" type="button">Change File</button>
-</div>
-<div class="profile-details" aria-label="Loaded profile details">
-<div class="detail-item">
-<span class="detail-label">Player Name</span>
-<strong id="player-name" class="detail-value">—</strong>
-</div>
-<div class="detail-item detail-right">
-<span class="detail-label">Game Version</span>
-<strong id="profile-version" class="detail-value">—</strong>
-</div>
-<div class="detail-item">
-<span class="detail-label">Created</span>
-<strong id="profile-created" class="detail-value">—</strong>
-</div>
-<div class="detail-item detail-right">
-<span class="detail-label">Last Modified</span>
-<strong id="profile-modified" class="detail-value">—</strong>
-</div>
-<div class="detail-item detail-last">
-<span class="detail-label">Play Time</span>
-<strong id="play-time" class="detail-value">—</strong>
-</div>
-<div class="detail-item detail-right detail-last">
-<span class="detail-label">Last Save Device</span>
-<strong id="save-device" class="detail-value">—</strong>
-</div>
-</div>
-<div id="auto-patch-progress" class="auto-patch-progress hidden" role="status" aria-live="polite">Reading and validating your DDV profile…</div>
-<div id="patch-result" class="patch-result hidden">
-<div class="result-heading">
-<div>
-<p class="eyebrow">Result</p>
-<h3 id="result-title">Patched</h3>
-</div>
-<button id="download-again" class="button ghost compact hidden" type="button">Download Again</button>
-</div>
-<p id="result-platform" class="result-platform"></p>
-<div id="result-list" class="result-list"></div>
+<div id="auto-patch-progress" class="auto-patch-progress hidden" role="status" aria-live="polite">Processing…</div>
+<div id="patch-result" class="patch-result hidden" role="status" aria-live="polite">
+<h2 id="result-title">Patched</h2>
 <p id="result-note" class="result-note"></p>
+<button id="download-again" class="button secondary compact hidden" type="button">Download Again</button>
 </div>
-<div id="inline-error" class="inline-error hidden">
-<strong>Unable to process this file</strong>
-<span id="error-message"></span>
+<div id="inline-error" class="inline-error hidden" role="alert">
+<h2 id="error-title">Invalid file</h2>
+<p id="error-message"></p>
 </div>
+<button id="reset-file" class="button ghost compact reset-file" type="button">Choose another file</button>
 </div>
+<p class="offline-note">Offline only. Online checks may reset DLC ownership.</p>
 </section>
 </main>
 <script type="module" src="./js/app.js"></script>
