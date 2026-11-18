@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { DLC_CATALOG, PLATFORM_MODES } from "../js/config.js";
+import { AUTO_PATCH_PLATFORMS, DLC_CATALOG } from "../js/config.js";
 import { applyPatchPlan, buildPatchPlan, hasTargetEntitlements, validateOwnershipChanges } from "../js/ownership.js";
 import { decryptGeneratedProfile, encryptProfile, isDDVProfile, loadProfile } from "../js/profile.js";
 import { protectedFingerprint, validatePatchedProfile, validateRoundTrip } from "../js/validator.js";
@@ -34,10 +34,10 @@ test("PRE-RELEASE GATE: only four evidence-backed DLC definitions are active", (
   assert.ok(DLC_CATALOG.every(item => !item.displayName.includes("Keepsake")));
 });
 
-test("Nintendo, Steam, and both remain distinct platform modes", () => {
-  assert.deepEqual(PLATFORM_MODES.switch, ["Nintendo"]);
-  assert.deepEqual(PLATFORM_MODES.steam, ["Steam"]);
-  assert.deepEqual(PLATFORM_MODES.both, ["Nintendo", "Steam"]);
+test("automatic patching targets all currently verified platforms without a user mode selector", () => {
+  assert.deepEqual([...AUTO_PATCH_PLATFORMS], ["Nintendo", "Steam"]);
+  assert.equal(new Set(AUTO_PATCH_PLATFORMS).size, AUTO_PATCH_PLATFORMS.length);
+  assert.ok(DLC_CATALOG.every(item => AUTO_PATCH_PLATFORMS.every(platform => item.entitlements[platform])));
 });
 
 test("Steam-only edit preserves Nintendo and unknown platform records", () => {
