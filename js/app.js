@@ -99,7 +99,6 @@ function resetPatchState() {
 }
 
 function resetAll() {
-  // Invalidate any pending file-read / crypto task; stale tasks may never download.
   ++loadSerial;
   state = { output: null };
   els.fileInput.value = "";
@@ -198,10 +197,9 @@ async function loadFile(file) {
     els.progress.classList.add("hidden");
     state.output = result.output;
 
-    // Only save a modified, round-trip-verified encrypted file.
     let downloaded = false;
     if (result.status === "patched") {
-      try { downloaded = downloadOutput(); } catch { /* Keep a user-initiated retry button. */ }
+      try { downloaded = downloadOutput(); } catch {}
     }
     renderResult(result, downloaded);
   } catch (error) {
