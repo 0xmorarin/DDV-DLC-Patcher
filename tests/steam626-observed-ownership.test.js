@@ -62,29 +62,28 @@ test("redacted Steam 626 projection retains observed original records and adds t
   const result = await patchProfileBytes(encrypted);
   assert.equal(result.status, "patched");
   assert.equal(result.inputType, "encrypted");
-  assert.equal(result.plan.anyPlatform.length, 1);
-  assert.equal(result.plan.platforms.Nintendo.additions.length, 1);
-  assert.equal(result.plan.platforms.Steam.additions.length, 1);
+  assert.equal(result.plan.anyPlatform.length, 0);
+  assert.equal(result.plan.platforms.Nintendo.additions.length, 0);
+  assert.equal(result.plan.platforms.Steam.additions.length, 0);
   for (const platform of ["Epic", "Microsoft", "Sony", "Apple"]) {
     assert.equal(result.plan.platforms[platform].createNode, true);
-    assert.equal(result.plan.platforms[platform].additions.length, 5);
+    assert.equal(result.plan.platforms[platform].additions.length, 4);
   }
-  assert.equal(result.totalAdded, 23);
+  assert.equal(result.totalAdded, 16);
   const decoded = await decryptGeneratedProfile(result.output);
   for (const platform of ["Nintendo", "Steam"]) {
     assert.deepEqual(decoded.ExpansionPackOwnershipByPlatform[platform].Entries.slice(0, observedEntitlements[platform].length),
       input.ExpansionPackOwnershipByPlatform[platform].Entries.slice(0, observedEntitlements[platform].length));
   }
-  assert.deepEqual(decoded.LastKnownBoughtExpansionsAnyPlatform.slice(0, -1),
+  assert.deepEqual(decoded.LastKnownBoughtExpansionsAnyPlatform,
     input.LastKnownBoughtExpansionsAnyPlatform);
-  assert.equal(decoded.LastKnownBoughtExpansionsAnyPlatform.at(-1), "Expansion04");
+  assert.equal(decoded.LastKnownBoughtExpansionsAnyPlatform.includes("Expansion04"), false);
   const repeat = await patchProfileBytes(result.output);
   assert.equal(repeat.status, "already-patched");
   assert.equal(repeat.output, null);
   const legacyOnly = await patchProfileBytes(encrypted, ["Nintendo", "Steam"]);
-  assert.equal(legacyOnly.status, "patched");
-  assert.equal(legacyOnly.plan.platforms.Nintendo.additions.length, 1);
-  assert.equal(legacyOnly.plan.platforms.Steam.additions.length, 1);
+  assert.equal(legacyOnly.status, "already-patched");
+  assert.equal(legacyOnly.output, null);
 });
 
 test("Steam 626 projection adds missing Steam pass and new storefront groups without changing old entries", async () => {
@@ -95,15 +94,15 @@ test("Steam 626 projection adds missing Steam pass and new storefront groups wit
   assert.equal(result.status, "patched");
   assert.equal(result.plan.anyPlatform.length, 1);
   assert.equal(result.plan.platforms.Nintendo.additions.length, 1);
-  assert.equal(result.plan.platforms.Steam.additions.length, 2);
-  assert.equal(result.totalAdded, 24);
+  assert.equal(result.plan.platforms.Steam.additions.length, 1);
+  assert.equal(result.totalAdded, 17);
   for (const platform of ["Epic", "Microsoft", "Sony", "Apple"]) {
     assert.equal(result.plan.platforms[platform].additions.length, 5);
   }
   const decoded = await decryptGeneratedProfile(result.output);
   assert.deepEqual(decoded.ExpansionPackOwnershipByPlatform.Nintendo.Entries.slice(0, 4),
     before.ExpansionPackOwnershipByPlatform.Nintendo.Entries.slice(0, 4));
-  assert.deepEqual(decoded.LastKnownBoughtExpansionsAnyPlatform.slice(0, -1),
+  assert.deepEqual(decoded.LastKnownBoughtExpansionsAnyPlatform,
     before.LastKnownBoughtExpansionsAnyPlatform);
   assert.deepEqual(decoded.SyntheticProtectedField, before.SyntheticProtectedField);
   assert.deepEqual(input, before);
@@ -112,11 +111,14 @@ test("Steam 626 projection adds missing Steam pass and new storefront groups wit
   assert.equal(repeated.output, null);
 });
 
-test("new save versions with unchanged required ownership structure are accepted", async () => {
+test("intermediate save versions with unchanged schema keep the conservative four-DLC catalog", async () => {
   const input = redactedSteam626Projection();
   input.GameInfo.Version = 627;
   const encrypted = await encryptProfile(input);
   const result = await patchProfileBytes(encrypted);
   assert.equal(result.version, 627);
   assert.equal(result.status, "patched");
+  assert.equal(result.catalog.length, 4);
+  assert.equal(result.plan.anyPlatform.length, 0);
+  assert.equal(result.plan.platforms.Nintendo.additions.length, 0);
 });
