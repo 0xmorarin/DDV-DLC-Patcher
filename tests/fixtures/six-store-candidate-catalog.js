@@ -7,7 +7,7 @@ export const ORIGINAL_IAP_UNIQUE_NAMES_V1253 = Object.freeze({
   "mini-expansion01": "MiniExpansion1PackExpansionPass"
 });
 
-export const SIX_STORE_CANDIDATE_CATALOG = Object.freeze(DLC_CATALOG.map(item => ({
+export const SIX_STORE_CANDIDATE_CATALOG = Object.freeze(DLC_CATALOG.filter(item => item.id !== "expansion04").map(item => ({
   ...item,
   entitlements: Object.fromEntries(STANDARD_STOREFRONT_GROUPS.map(group => [
     group, {
