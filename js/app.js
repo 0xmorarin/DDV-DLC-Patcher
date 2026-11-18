@@ -172,7 +172,7 @@ async function loadFile(file) {
   const requestId = loadSerial;
   if (!file) return;
 
-  els.fileInput.value = ""; // allow selection of the same file again
+  els.fileInput.value = "";
   els.uploadState.classList.add("hidden");
   els.profileState.classList.remove("hidden");
   els.profileName.textContent = file.name || "profile";
