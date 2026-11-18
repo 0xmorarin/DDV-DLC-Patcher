@@ -1,3 +1,5 @@
+export const MIN_SUPPORTED_PROFILE_VERSION = 591;
+export const FIVE_DLC_MIN_PROFILE_VERSION = 643;
 export const ZIP_INNER_NAME = "profile";
 export const HEX_KEY = "62357168683873614A38556C444A557A545A5864325467366D626F3857386E35";
 export const STANDARD_STOREFRONT_GROUPS = Object.freeze([
@@ -53,3 +55,7 @@ export const DLC_CATALOG = [
     entitlements: entitlementDefinitions("Expansion4PackExpansionPass")
   }
 ];
+
+export function catalogForProfileVersion(version) {
+  return version >= FIVE_DLC_MIN_PROFILE_VERSION ? DLC_CATALOG : DLC_CATALOG.slice(0, 4);
+}
