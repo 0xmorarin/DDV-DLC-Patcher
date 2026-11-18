@@ -28,10 +28,10 @@ function patched(before, platforms) {
   return { value, plan };
 }
 
-test("PRE-RELEASE GATE: only four evidence-backed DLC definitions are active", () => {
+test("v1.26.1 has five original-evidence-backed DLC entries", () => {
   assert.deepEqual(DLC_CATALOG.map(item => item.anyPlatformId),
-    ["Expansion01", "Expansion02", "Expansion03", "WinnieDLC"]);
-  assert.ok(DLC_CATALOG.every(item => !item.displayName.includes("Keepsake")));
+    ["Expansion01", "Expansion02", "Expansion03", "WinnieDLC", "Expansion04"]);
+  assert.equal(DLC_CATALOG[4].displayName, "The Keepsake Sea");
 });
 
 test("automatic patching targets all currently verified platforms without a user mode selector", () => {
@@ -117,13 +117,20 @@ test("unsupported any-platform and selected platform structures fail closed", ()
   assert.throws(() => buildPatchPlan(badRecords, ["Nintendo"]));
 });
 
-test("contradictory existing entitlement fails instead of being overwritten", () => {
+test("noncanonical existing entitlement metadata is not overwritten or duplicated", () => {
   const before = fixture();
   before.ExpansionPackOwnershipByPlatform.Nintendo.Entries.push({
     ...DLC_CATALOG[0].entitlements.Nintendo,
     Type: "Type_Contradictory"
   });
-  assert.throws(() => buildPatchPlan(before, ["Nintendo"]));
+  const original = structuredClone(before);
+  const plan = buildPatchPlan(before, ["Nintendo"]);
+  assert.equal(plan.platforms.Nintendo.additions.length, DLC_CATALOG.length - 1);
+  const after = structuredClone(before);
+  applyPatchPlan(after, plan);
+  assert.deepEqual(after.ExpansionPackOwnershipByPlatform.Nintendo.Entries[1],
+    original.ExpansionPackOwnershipByPlatform.Nintendo.Entries[1]);
+  assert.equal(validateOwnershipChanges(before, after, ["Nintendo"], plan), true);
 });
 
 test("validation rejects new unrelated entries in ownership root", () => {
