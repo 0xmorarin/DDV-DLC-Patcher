@@ -123,6 +123,14 @@ test("UI has no manual platform selection or patch execution button", async () =
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   const app = await readFile(new URL("../js/app.js", import.meta.url), "utf8");
   assert.doesNotMatch(html, /name="platform"|id="patch-button"/);
+  assert.equal(html.split('class="card ').length - 1, 1);
+  for (const removed of ['class="version-scope"', 'class="platform-scope"',
+    'class="profile-details"', 'id="result-list"', 'id="result-platform"',
+    'id="player-name"', 'id="profile-created"', 'id="ingame-id"']) {
+    assert.equal(html.includes(removed), false);
+  }
+  assert.match(html, /id="result-title"/);
+  assert.match(html, /id="error-title"/);
   assert.match(html, /id="auto-patch-progress"/);
   assert.match(app, /await patchProfileBytes\(raw\)/);
   assert.match(app, /if \(result\.status === "patched"\)/);
