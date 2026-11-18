@@ -1,6 +1,6 @@
 # Edition entitlement / offline reward research — 2026-11-18
 
-Status: STATIC CANDIDATES IDENTIFIED; NO EDITION-BONUS PATCH ENABLED; OFFLINE AUTO-GRANT NOT PROVEN.
+Status: V1.25.3 PER-PACK SERIALIZED IAP / NATIVE STATIC VERIFIED; NO EDITION-BONUS PATCH ENABLED; OFFLINE AUTO-GRANT NOT PROVEN.
 
 ## Why revisit this now
 
@@ -53,7 +53,11 @@ Original v1.25.3 Switch NSO and IL2CPP metadata have now been examined with veri
 - `Profile.HasEditionOrEquivalentOwnership` is called by `GetPurchasablePacksForExpansion` in the purchase-availability chain, reachable from Premium Shop models. It scans related existing platform ownership entries. The observed native filter skips ordinary ExpansionPack entries and family-sharing entries; a matching non-ExpansionPack / non-family-sharing entry can change the shop's edition-equivalence result.
 - This proves a **conditional local shop-listing/ownership-equivalence effect**. It does not prove delivery of any DLC edition cosmetics, Moonstones, dedicated quests, or adventure companions.
 - A separate `AutoRedeemFoundersPack` service request includes installed entitlements, marketplace and founder-pack unique names; the cloud-side redemption state machine references PlayFab user/inventory/grant operations. `TrackClaimedFoundersPack` records history, not evidence of a local reward grant.
-- `IAPData.IsLocalEntitlement` and `OwnershipCheckRequired` have verified native field offsets, but their actual Boolean values for any target Deluxe package remain **unavailable** without original serialized IAP instances. The new Keepsake Sea reward path also requires new-build verification.
+- **Updated on 2026-11-18:** actual v1.25.3 WBR Deluxe IAP instance was retrieved from the legitimate Steam game source: `IsLocalEntitlement=false` (omitted on wire), `OwnershipCheckRequired=true` (explicit). Switch v1.25.3 native `IsOnlineSyncRequired()` evaluates to true for its type 4. Details in `docs/WBR_DELUXE_SVEN_EDITION_OFFLINE_VERDICT_20261118.md`. Newly released Keepsake Sea still requires separate new-build evidence.
 - The current public patcher must NOT insert guessed edition IDs, receipts, grant histories, or a `PackType=ExpansionPack` record as a substitute for a distinct edition entry.
 
 **Decision:** A separate opt-in Edition mode is technically motivated because edition ownership can affect shop state. Actual writing, edition entitlement IDs and any claim of offline rewards remain evidence-gated. The mainline four-DLC catalog and the PR's Draft state remain unchanged.
+
+## 2026-11-18 follow-up — edition data actually obtained
+
+Read `docs/WBR_DELUXE_SVEN_EDITION_OFFLINE_VERDICT_20261118.md` for native-verified WBR Deluxe field values, Sven's actual IAP reward tuple and Kristoff quest predicates. This follow-up **supersedes earlier statements in this research note that per-package IAP values were unavailable**. Offline edition-only grant remains untested. Keep the PR in Draft.
