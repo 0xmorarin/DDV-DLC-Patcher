@@ -554,3 +554,38 @@ h3 {
   .support-badge { align-self: flex-start; }
   .button.compact { flex: 0 0 auto; }
 }
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.global-drop-overlay {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(5, 17, 38, .86);
+  border: 4px dashed rgba(174, 233, 247, .88);
+  pointer-events: none;
+  backdrop-filter: blur(10px);
+}
+.global-drop-prompt {
+  max-width: min(700px, 100%);
+  border: 1px solid rgba(230,206,149,.55);
+  border-radius: 24px;
+  padding: 32px 42px;
+  background: rgba(20,42,85,.90);
+  color: #fbfbf7;
+  font-size: clamp(1.35rem, 3vw, 2.4rem);
+  font-weight: 760;
+  line-height: 1.4;
+  text-align: center;
+}
+@media (max-width: 700px) {
+  .hero-actions { justify-content: flex-start; }
+}
