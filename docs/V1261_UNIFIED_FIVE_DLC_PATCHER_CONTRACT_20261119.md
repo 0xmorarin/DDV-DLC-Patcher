@@ -44,7 +44,7 @@ The new `Expansion4PackExpansionPass` row itself has an empty `AssociatedExpansi
 
 `GameInfo.InitialVersion` is **not** the selection key. A profile created in an older version but saved by v1.26.1 can have `InitialVersion=518` and `Version=643`; it must use five DLCs.
 
-The UI displays **v1.24.1+** as the overall support range, shows the two catalog ranges and labels The Keepsake Sea as requiring v1.26.1+. Before loading, it lists all possible DLCs with the limitation; after loading it shows precisely the selected four or five. `GameInfo.Version` is never modified by the patcher.
+The UI intentionally displays **v1.26.1+** as its current release label, not as a minimum-eligibility gate. The backend still accepts save versions 591–642 and applies only the original four DLCs, while version 643+ receives all five. Before loading, the compact list displays five current DLC names; after loading, it displays precisely the eligible four or five. The badge does not change when an older valid profile is selected. `GameInfo.Version` is never modified by the patcher.
 
 This release-name-to-save-counter mapping is source-grounded at the known endpoints, not asserted for every intermediate integer. When later build evidence arrives, update the mapping if required rather than guessing. A future build with an incompatible Profile schema fails the normal structural/round-trip checks.
 
@@ -62,11 +62,11 @@ This makes the tool a *local save-data marker editor*. It does not grant marketp
 
 ## User experience
 
-**One unified card, minimum copy.** The previous separate hero and workspace cards were merged into one responsive card. The two long release-range and storefront paragraphs were removed entirely, as were the player/account/created/modified/play-time/device details and the platform-by-platform/DLC-by-DLC patch report. The compact DLC name list remains, with four or five names depending on the validated save version; The Keepsake Sea carries a short `v1.26.1+` suffix. The version badge still reads `v1.24.1+`.
+**One richly decorated royal card, minimum copy.** The page uses one responsive, double-gilded card with ornamental corner rules, a custom celestial crest, gold-gradient serif title, jewel-like DLC capsules and a gold file-selection control. The previous verbose release-range and storefront paragraphs and all personal profile details and per-DLC patch reports remain absent. The compact DLC names switch between four and five according to the save version, with no per-name version suffix; the **only prominent version label is `v1.26.1+`**. The royalty of the layout is visual, not additional text.
 
 A file can be dropped anywhere on the page or chosen with the **Choose File** button. Patch/download begins automatically. The outcome is limited to `Patched`, `Already patched`, `Unsupported version`, `Invalid file` or an exceptional `Could not patch` status with a brief explanation. `Download Again` remains available only after successful output creation, and **Choose another file** resets the card. No counts, personal profile fields, individual DLC additions or selectable platform options appear. A concise offline-only caution remains.
 
-The full-screen drag overlay, local processing and zero external requests remain unchanged. The version minimum and the four-versus-five DLC rules live in the patch engine; the presentation does not choose entitlement rules.
+A single original `assets/royal-nebula.svg` paints the whole viewport with non-tiled organic turbulent nebula clouds, irregularly positioned individual stars and soft violet/azure haze. CSS uses `cover no-repeat fixed`; there are no repeated star-dot patterns, network fonts, or hosted assets. The full-screen drag overlay, local processing and zero external requests remain unchanged. The version minimum and the four-versus-five DLC rules live in the patch engine; the presentation does not choose entitlement rules.
 
 ## Verification status and limitations
 
