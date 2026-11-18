@@ -44,6 +44,16 @@ Both encrypted DDV profile bytes and unencrypted DDV JSON files are supported wh
 
 The report is **evidence**, not permission to enable a writer. Validate the source platform and actual in-game purchase/recognition independently; review the redacted report before sharing even privately. An unchanged saved profile is not proof that the expansion identifier is absent from the game. When comparing two snapshots, confirm that source files are actually paired and that the timestamp and GameInfo.Version are appropriate.
 
+## Offline protoDb definition comparison
+
+The executable scan does not depend on external Python modules or undocumented global variables. Supply the v1.25.3 original and the actual updated original:
+
+```sh
+node tools/inspect-protodb-iap.mjs --before /private/v1253/protoDb.bin --after /private/new/protoDb.bin --output /private/new-iap-delta.json
+```
+
+It parses `Definitions.IAPData` and `Definitions.StoreFrontGroup` from the protobuf data, records IAP `UniqueName`, `AssociatedExpansion`, IAP type, standard/custom storefront product-market presence, original sizes and SHA-256 checksums, and reports added/removed/changed IAP definitions. An unreadable or unexpected protobuf format fails instead of inventing data. These are only static storefront observations, not saved ownership or purchase evidence.
+
 ## Exact new-data verification sequence
 
 1. Verify which files arrived: inventory, original file sizes, SHA-256, complete Build ID, Title ID, GameInfo.Version, provenance, and date. Separate the source dump from reports and derived data. Verify archive contents by reading the archive, not its name or manifest alone.
