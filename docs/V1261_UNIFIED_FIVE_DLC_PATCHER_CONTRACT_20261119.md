@@ -4,6 +4,10 @@
 
 This is the current implementation contract. Earlier November 18 preflight documents and any notes about a four-pass catalog or profile-version write ceiling describe superseded intermediate states.
 
+## Production release record
+
+The owner-approved final v3 website is public at **https://0xmorarin.github.io/DDV-DLC-Patcher/**. PR #1 was squash-merged into main at `02d94c652ff2112f2ee9bff3ae458da7fe6f0ad4`. Approved HTML/CSS Git blob SHAs: `2f216776be420e85b8c6dc0bb40be851c4fb35cb` and `84c0fbd4c9c777aaa49a758e9edbc2aaf342fdee`. GitHub Actions Node 64 tests and Chromium E2E passed; the public HTTPS site, stylesheet, original nebula artwork and 591/643 version gate were verified by the production deployment smoke test. Public Pages excludes research and private files from its site build, although the source repository itself is public. A GitHub Releases tag is not part of this website release.
+
 ## Source identity and exact evidence
 
 The genuine v1.26.1 originals were inspected during the native-static research. The source-specific forensic record is [NATIVE_SIX_STORE_OWNERSHIP_PROOF_V1_26_1_20261119.md](./NATIVE_SIX_STORE_OWNERSHIP_PROOF_V1_26_1_20261119.md).
@@ -62,7 +66,7 @@ This makes the tool a *local save-data marker editor*. It does not grant marketp
 
 ## User experience
 
-**One richly decorated royal card, minimum copy.** The page uses one responsive, double-gilded card with ornamental corner rules, a custom celestial crest, gold-gradient serif title, jewel-like DLC capsules and a gold file-selection control. The previous verbose release-range and storefront paragraphs and all personal profile details and per-DLC patch reports remain absent. The compact DLC names switch between four and five according to the save version, with no per-name version suffix; the **only prominent version label is `v1.26.1+`**. The royalty of the layout is visual, not additional text.
+**Final owner-approved v3: one restrained royal card, minimum copy.** The page uses one responsive softly gilded card, readable sans-serif typography, a plain line below the title, compact DLC name capsules, a simple download-tray icon and a gold file-selection button. It deliberately has no celestial crest above the title, no elaborate ornamental divider, no corner flourishes and no decorative icon above `Patched`. The previous verbose release-range and storefront paragraphs and all personal profile details and per-DLC patch reports remain absent. The compact DLC names switch between four and five according to save version, with no per-name version suffix; the only prominent version label is **`v1.26.1+`**.
 
 A file can be dropped anywhere on the page or chosen with the **Choose File** button. Patch/download begins automatically. The outcome is limited to `Patched`, `Already patched`, `Unsupported version`, `Invalid file` or an exceptional `Could not patch` status with a brief explanation. `Download Again` remains available only after successful output creation, and **Choose another file** resets the card. No counts, personal profile fields, individual DLC additions or selectable platform options appear. A concise offline-only caution remains.
 
@@ -75,7 +79,7 @@ A single original `assets/royal-nebula.svg` paints the whole viewport with non-t
 - Playwright Chromium E2E covers full-page drag-and-drop with overlay, file chooser, auto-download and Download Again, invalid-file no output, no-op no download and no outbound requests.
 - Genuine v1.26.1 original JSON source shape and entitlement fields are independently observed; **the browser tests use synthetic profiles**, not the original private file.
 - **Four non-Switch/Steam platforms are static-evidence only.** Their distinct native binaries, real platform containers, store-service behavior and live in-game reload/sync have not been run. These are disclosed limitations, not universal mandatory blockers for the owner's static-acceptance policy.
-- No direct modification of `main`, no unrequested release or merge. Publication remains a separate decision after reviewing the exact PR HEAD and acceptance record.
+- Owner-directed production website publishing and main merge were completed. Future publication changes should continue to use CI and source-specific validation.
 
 For the next update, re-check the original Build ID, IAP product definitions, StoreFrontGroup origin mapping and Profile structure. Retain the v1.24.1 minimum and source-backed DLC cutover; do not impose an arbitrary future-version ceiling while the schema remains compatible.
 
