@@ -21,10 +21,10 @@
 - **Explicit exclusion:** `AppleArcade` is a separate edition with expansions/adventure packs bundled by default and its own cross-save ecosystem; the DLC ownership patch has no purpose there. Keep it out of both the storefront registry and the writer.
 - Deluxe/Ultimate edition purchases and online premium grants are not edited.
 - Neither a local save ownership marker nor a patcher success message asserts purchased storefront entitlement, online verification, or cross-buy.
-- An actual Playwright/browser E2E user-gesture download and offline device reload still need independent verification. The existing GitHub Actions test is Node contract/static UI testing, not a completed browser download test.
+- Chromium Playwright browser E2E passed on GitHub Actions using synthetic encrypted profiles on November 18, 2026: file chooser, drag and drop, automatic download, Download Again, no-op, malformed input, and local-only network. This does not validate browser handling of the original private save, physical-platform file transport, or offline device reload.
 
 ## Regression evidence
 
-Run `npm test` on the draft branch. Automated tests cover both verified platforms, partial additions, all-owned skip, encrypted input, idempotency, protected fields, retained edition-like records, unsupported structures, contradiction errors, and HTML removal of legacy controls.
+Run `npm test` on the draft branch and `node tests/browser-e2e.mjs` with Playwright and Chrome available. Automated tests cover both verified platforms, partial additions, all-owned skip, encrypted input, idempotency, protected fields, retained edition-like records, unsupported structures, contradiction errors, and HTML removal of legacy controls.
 
 **Release gate:** Re-run CI on final new DLC Build; validate new catalog keys and the exact six standard storefront ownership identifiers inside the shared Profile before extending the allowlist; do not invent separate save structures. Preserve main until ready.
