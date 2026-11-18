@@ -1,9 +1,9 @@
-import { DLC_CATALOG, PLATFORM_MODES } from "./config.js";
-import { decryptGeneratedProfile, encryptProfile, loadProfile, validateProfileVersion } from "./profile.js";
-import { applyPatchPlan, buildPatchPlan, summarizePlan } from "./ownership.js";
-import { protectedFingerprint, validatePatchedProfile, validateRoundTrip } from "./validator.js";
+import { DLC_CATALOG } from "./config.js";
+import { patchProfileBytes } from "./auto-patch.js";
+import { summarizePlan } from "./ownership.js";
 
 const els = {
+  workspace: document.getElementById("workspace-card"),
   dlcList: document.getElementById("dlc-list"),
   uploadState: document.getElementById("upload-state"),
   chooseFile: document.getElementById("choose-file"),
@@ -20,7 +20,7 @@ const els = {
   playTime: document.getElementById("play-time"),
   saveDevice: document.getElementById("save-device"),
   resetFile: document.getElementById("reset-file"),
-  patchButton: document.getElementById("patch-button"),
+  progress: document.getElementById("auto-patch-progress"),
   patchResult: document.getElementById("patch-result"),
   resultTitle: document.getElementById("result-title"),
   resultPlatform: document.getElementById("result-platform"),
@@ -31,7 +31,8 @@ const els = {
   errorMessage: document.getElementById("error-message")
 };
 
-let state = { file: null, profile: null, inputType: null, output: null };
+let state = { output: null };
+let loadSerial = 0;
 
 function renderDlcList() {
   els.dlcList.replaceChildren(...DLC_CATALOG.map(item => {
@@ -40,7 +41,6 @@ function renderDlcList() {
     return li;
   }));
 }
-
 
 function formatTimestamp(value) {
   if (typeof value !== "string" || !value) return "—";
@@ -77,85 +77,45 @@ function renderProfileDetails(profile) {
   els.saveDevice.textContent = formatDevice(gameInfo.LastSaveDeviceInfo);
 }
 
-function selectedMode() {
-  return document.querySelector('input[name="platform"]:checked')?.value ?? "switch";
-}
-
-function selectedPlatforms() {
-  const platforms = PLATFORM_MODES[selectedMode()];
-  if (!platforms) throw new Error("Invalid platform selection.");
-  return platforms;
-}
-
-function targetLabel() {
-  const mode = selectedMode();
-  if (mode === "switch") return "Nintendo Switch";
-  if (mode === "steam") return "Steam";
-  return "Nintendo Switch + Steam";
-}
-
 function hideError() {
   els.inlineError.classList.add("hidden");
   els.errorMessage.textContent = "";
 }
 
 function showError(error) {
-  els.errorMessage.textContent = error instanceof Error ? error.message : String(error);
   els.inlineError.classList.remove("hidden");
+  els.errorMessage.textContent = error instanceof Error ? error.message : String(error);
 }
 
 function resetPatchState() {
   state.output = null;
   els.patchResult.classList.add("hidden");
   els.downloadAgain.classList.add("hidden");
+  els.progress.classList.add("hidden");
   els.resultList.replaceChildren();
   els.resultPlatform.textContent = "";
   els.resultNote.textContent = "";
-  els.patchButton.classList.remove("hidden");
-  els.patchButton.disabled = false;
-  els.patchButton.textContent = "Patch & Download";
   hideError();
 }
 
 function resetAll() {
-  state = { file: null, profile: null, inputType: null, output: null };
+  // Invalidate any pending file-read / crypto task; stale tasks may never download.
+  ++loadSerial;
+  state = { output: null };
   els.fileInput.value = "";
   els.uploadState.classList.remove("hidden");
   els.profileState.classList.add("hidden");
-  const defaultRadio = document.querySelector('input[name="platform"][value="switch"]');
-  if (defaultRadio) defaultRadio.checked = true;
+  els.workspace.classList.remove("dragging");
   resetPatchState();
 }
 
-async function loadFile(file) {
-  resetAll();
-  try {
-    if (!file) return;
-    if (file.size === 0) throw new Error("The selected file is empty.");
-    const raw = new Uint8Array(await file.arrayBuffer());
-    const loaded = await loadProfile(raw);
-    const version = validateProfileVersion(loaded.profile);
-    state.file = file;
-    state.profile = loaded.profile;
-    state.inputType = loaded.inputType;
-    els.profileName.textContent = file.name || "profile";
-    els.inputType.textContent = loaded.inputType === "plain" ? "Decrypted JSON" : "Encrypted profile";
-    els.profileVersion.textContent = String(version);
-    els.profileStatus.textContent = "Ready";
-    renderProfileDetails(loaded.profile);
-    els.uploadState.classList.add("hidden");
-    els.profileState.classList.remove("hidden");
-  } catch (error) {
-    els.uploadState.classList.add("hidden");
-    els.profileState.classList.remove("hidden");
-    els.profileName.textContent = file?.name || "profile";
-    els.inputType.textContent = "Unknown input";
-    els.profileVersion.textContent = "—";
-    els.profileStatus.textContent = "Error";
-    renderProfileDetails(null);
-    els.patchButton.classList.add("hidden");
-    showError(error);
-  }
+function setProgress(message) {
+  els.progress.textContent = message;
+  els.progress.classList.remove("hidden");
+}
+
+function platformLabel(platform) {
+  return platform === "Nintendo" ? "Nintendo Switch" : platform;
 }
 
 function createResultItem(name, status) {
@@ -164,25 +124,28 @@ function createResultItem(name, status) {
   const label = document.createElement("span");
   label.className = "result-name";
   label.textContent = name;
-  const badge = document.createElement("span");
-  badge.className = `result-badge${status === "Already present" ? " existing" : ""}`;
-  badge.textContent = status;
-  item.append(label, badge);
+  const result = document.createElement("span");
+  result.className = `result-badge${status === "Already present" ? " existing" : ""}`;
+  result.textContent = status;
+  item.append(label, result);
   return item;
 }
 
-function renderResult(plan, platforms, totalAdded, downloaded) {
+function renderResult(result, automaticDownloadRequested) {
+  const { plan, platforms, totalAdded, status } = result;
   const summary = summarizePlan(plan, platforms);
-  els.resultList.replaceChildren(...summary.map(item => createResultItem(item.name, item.sources.length ? "Added" : "Already present")));
-  els.resultPlatform.textContent = targetLabel();
-  els.patchButton.classList.add("hidden");
-  if (totalAdded === 0) {
-    els.resultTitle.textContent = "No changes needed";
-    els.resultNote.textContent = "All supported DLC ownership records are already present for the selected platform.";
+  els.resultList.replaceChildren(...summary.map(item =>
+    createResultItem(item.name, item.sources.length ? "Added" : "Already present")));
+  els.resultPlatform.textContent = `Target platforms: ${platforms.map(platformLabel).join(" + ")}`;
+  if (status === "already-patched") {
+    els.resultTitle.textContent = "Already fully patched";
+    els.resultNote.textContent = "Every currently supported expansion pass is already present for all verified target platforms. No changes were made and no file was downloaded.";
     els.downloadAgain.classList.add("hidden");
   } else {
-    els.resultTitle.textContent = downloaded ? "Patched & downloaded" : "Patched";
-    els.resultNote.textContent = "Validation passed · Existing ownership and unrelated save data were preserved.";
+    els.resultTitle.textContent = "Patched";
+    els.resultNote.textContent = automaticDownloadRequested
+      ? `Validated ${totalAdded} new ownership records. Automatic download requested. If your browser blocked it, select Download Again.`
+      : "Patch validated, but the automatic download could not be started. Select Download Again.";
     els.downloadAgain.classList.remove("hidden");
   }
   els.patchResult.classList.remove("hidden");
@@ -192,44 +155,60 @@ function downloadOutput() {
   if (!state.output) return false;
   const blob = new Blob([state.output], { type: "application/octet-stream" });
   const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = "profile.json";
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-  return true;
+  try {
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "profile.json";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    return true;
+  } finally {
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
 }
 
-async function patchCurrentProfile() {
-  hideError();
-  if (!state.profile) return;
-  els.patchResult.classList.add("hidden");
-  els.patchButton.disabled = true;
-  els.patchButton.textContent = "Patching & Downloading…";
+async function loadFile(file) {
+  resetAll();
+  const requestId = loadSerial;
+  if (!file) return;
+
+  els.fileInput.value = ""; // allow selection of the same file again
+  els.uploadState.classList.add("hidden");
+  els.profileState.classList.remove("hidden");
+  els.profileName.textContent = file.name || "profile";
+  els.inputType.textContent = "Checking file";
+  els.profileVersion.textContent = "—";
+  els.profileStatus.textContent = "Processing";
+  renderProfileDetails(null);
+  setProgress("Reading and validating your DDV profile…");
+
   try {
-    const platforms = selectedPlatforms();
-    const before = structuredClone(state.profile);
-    const protectedHash = await protectedFingerprint(before);
-    const plan = buildPatchPlan(before, platforms);
-    const totalAdded = plan.anyPlatform.length + Object.values(plan.platforms).reduce((sum, value) => sum + value.additions.length, 0);
-    if (totalAdded === 0) {
-      renderResult(plan, platforms, 0, false);
-      return;
+    if (file.size === 0) throw new Error("The selected file is empty.");
+    const raw = new Uint8Array(await file.arrayBuffer());
+    if (requestId !== loadSerial) return;
+    setProgress("Applying missing expansion ownership records and validating the result…");
+    const result = await patchProfileBytes(raw);
+    if (requestId !== loadSerial) return;
+
+    els.inputType.textContent = result.inputType === "plain" ? "Decrypted JSON" : "Encrypted profile";
+    els.profileVersion.textContent = String(result.version);
+    renderProfileDetails(result.profile);
+    els.profileStatus.textContent = result.status === "already-patched" ? "Already patched" : "Complete";
+    els.progress.classList.add("hidden");
+    state.output = result.output;
+
+    // Only save a modified, round-trip-verified encrypted file.
+    let downloaded = false;
+    if (result.status === "patched") {
+      try { downloaded = downloadOutput(); } catch { /* Keep a user-initiated retry button. */ }
     }
-    const patched = structuredClone(before);
-    applyPatchPlan(patched, plan);
-    await validatePatchedProfile(before, patched, platforms, plan, protectedHash);
-    const encrypted = await encryptProfile(patched);
-    const decoded = await decryptGeneratedProfile(encrypted);
-    await validateRoundTrip(patched, decoded, before, platforms, plan, protectedHash);
-    state.output = encrypted;
-    const downloaded = downloadOutput();
-    renderResult(plan, platforms, totalAdded, downloaded);
+    renderResult(result, downloaded);
   } catch (error) {
-    els.patchButton.disabled = false;
-    els.patchButton.textContent = "Patch & Download";
+    if (requestId !== loadSerial) return;
+    els.progress.classList.add("hidden");
+    els.profileStatus.textContent = "Error";
+    state.output = null;
     showError(error);
   }
 }
@@ -247,18 +226,33 @@ els.uploadState.addEventListener("keydown", event => {
     els.fileInput.click();
   }
 });
-els.fileInput.addEventListener("change", () => loadFile(els.fileInput.files?.[0]));
-for (const eventName of ["dragenter", "dragover"]) els.uploadState.addEventListener(eventName, event => {
-  event.preventDefault();
-  els.uploadState.classList.add("dragging");
+els.fileInput.addEventListener("change", () => { void loadFile(els.fileInput.files?.[0]); });
+
+for (const eventName of ["dragenter", "dragover"]) {
+  els.workspace.addEventListener(eventName, event => {
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+    els.workspace.classList.add("dragging");
+  });
+}
+els.workspace.addEventListener("dragleave", event => {
+  if (!els.workspace.contains(event.relatedTarget)) els.workspace.classList.remove("dragging");
 });
-for (const eventName of ["dragleave", "drop"]) els.uploadState.addEventListener(eventName, event => {
+els.workspace.addEventListener("drop", event => {
   event.preventDefault();
-  els.uploadState.classList.remove("dragging");
+  els.workspace.classList.remove("dragging");
+  if (event.dataTransfer?.files?.length !== 1) {
+    resetAll();
+    els.uploadState.classList.add("hidden");
+    els.profileState.classList.remove("hidden");
+    els.profileStatus.textContent = "Error";
+    showError(new Error("Drop exactly one DDV profile file."));
+    return;
+  }
+  void loadFile(event.dataTransfer.files[0]);
 });
-els.uploadState.addEventListener("drop", event => loadFile(event.dataTransfer?.files?.[0]));
 els.resetFile.addEventListener("click", resetAll);
-els.patchButton.addEventListener("click", patchCurrentProfile);
-els.downloadAgain.addEventListener("click", downloadOutput);
-document.querySelectorAll('input[name="platform"]').forEach(input => input.addEventListener("change", resetPatchState));
+els.downloadAgain.addEventListener("click", () => {
+  try { downloadOutput(); } catch (error) { showError(error); }
+});
 renderDlcList();
