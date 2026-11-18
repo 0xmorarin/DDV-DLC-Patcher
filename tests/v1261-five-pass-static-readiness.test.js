@@ -34,8 +34,8 @@ function observedProjection() {
     ExpansionPackOwnershipByPlatform: {
       Nintendo: {
         Entries: [
-          ...DLC_CATALOG.map(item => item.entitlements.Nintendo),
-          five[4].entitlements.Nintendo,
+          ...DLC_CATALOG.map(item => ({ ...item.entitlements.Nintendo })),
+          { ...five[4].entitlements.Nintendo },
           {
             PackName: "Expansion4PackDeluxeEdition_Nintendo_OnlineKey",
             PackType: "ConsumableEditionPack",
@@ -43,7 +43,7 @@ function observedProjection() {
           }
         ]
       },
-      Steam: { Entries: DLC_CATALOG.map(item => item.entitlements.Steam) },
+      Steam: { Entries: DLC_CATALOG.map(item => ({ ...item.entitlements.Steam })) },
       AppleArcade: { Entries: [
         { PackName: "ArcadeContent_Existing", PackType: "Other", Type: "Unchanged" }
       ] }
