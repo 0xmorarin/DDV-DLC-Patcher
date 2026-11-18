@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#071126">
+<meta name="theme-color" content="#090c25">
 <title>DDV DLC Patcher</title>
 <link rel="stylesheet" href="./style.css">
 </head>
@@ -12,34 +12,62 @@
 <div id="global-drop-overlay" class="global-drop-overlay hidden" aria-hidden="true"><div class="global-drop-prompt">Drop profile here</div></div>
 <main class="page-shell">
 <section id="workspace-card" class="card unified-card">
+<div class="royal-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 <div class="title-row">
-<div class="brand"><p class="eyebrow">Disney Dreamlight Valley</p><h1>DDV DLC Patcher</h1></div>
+<div class="brand">
+<div class="royal-seal" aria-hidden="true">
+<svg viewBox="0 0 100 100" fill="none">
+<circle cx="50" cy="50" r="46" stroke="currentColor" stroke-opacity=".50" stroke-width=".8"/>
+<circle cx="50" cy="50" r="37" stroke="currentColor" stroke-opacity=".55" stroke-width=".7"/>
+<path d="M50 14 56.7 37.5 80 44.7 56.7 52 50 77 43.3 52 20 44.7 43.3 37.5Z" stroke="currentColor" stroke-width="1.6"/>
+<path d="M32 62 50 82 68 62 M31 26 50 18 69 26" stroke="currentColor" stroke-opacity=".55" stroke-width=".9"/>
+<circle cx="50" cy="45" r="5" fill="currentColor"/>
+<circle cx="50" cy="45" r="10.5" stroke="currentColor" stroke-opacity=".7" stroke-width=".8"/>
+<path d="M50 4v7 M50 90v7 M4 50h8 M88 50h8" stroke="currentColor" stroke-opacity=".6"/>
+</svg>
+</div>
+<p class="eyebrow">Disney Dreamlight Valley</p>
+<h1>DDV DLC Patcher</h1>
+</div>
 <div class="support-badge">v1.26.1+</div>
+</div>
+<div class="ornament-divider" aria-hidden="true">
+<span></span>
+<svg viewBox="0 0 70 22" fill="none">
+<path d="M4 11 Q18 11 27 3 M4 11 Q18 11 27 19 M66 11 Q52 11 43 3 M66 11 Q52 11 43 19" stroke="currentColor" stroke-width=".9" stroke-opacity=".75"/>
+<path d="M35 2 43 11 35 20 27 11Z" fill="currentColor"/>
+<circle cx="15" cy="11" r="1.5" fill="currentColor"/><circle cx="55" cy="11" r="1.5" fill="currentColor"/>
+</svg>
+<span></span>
 </div>
 <div class="supported-row">
 <span class="section-label">Supported DLCs</span>
 <ul id="dlc-list" class="dlc-list"></ul>
 </div>
 <div id="upload-state" class="upload-state" tabindex="0" role="button" aria-label="Drop or choose a DDV profile">
-<div class="drop-symbol" aria-hidden="true">↓</div>
+<div class="drop-symbol" aria-hidden="true">
+<svg viewBox="0 0 64 64" fill="none">
+<path d="M32 9v35 M22 34l10 11 10-11" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12 46v8h40v-8" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M10 19h9 M14.5 14.5v9 M47 14h8 M51 10v8 M42 52h6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".7"/>
+</svg>
+</div>
 <h2>Drop profile here</h2>
-<button id="choose-file" class="button secondary" type="button">Choose File</button>
+<button id="choose-file" class="button secondary" type="button"><span>Choose File</span><svg viewBox="0 0 20 20" aria-hidden="true" fill="none"><path d="M4 10h11 M10 5l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 <input id="file-input" type="file" hidden>
 </div>
 <div id="profile-state" class="profile-state hidden">
-<div id="auto-patch-progress" class="auto-patch-progress hidden" role="status" aria-live="polite">Processing…</div>
+<div id="auto-patch-progress" class="auto-patch-progress hidden" role="status" aria-live="polite"><span class="processing-orb" aria-hidden="true"></span>Processing…</div>
 <div id="patch-result" class="patch-result hidden" role="status" aria-live="polite">
+<div id="status-mark" class="status-mark" aria-hidden="true">✦</div>
 <h2 id="result-title">Patched</h2>
 <p id="result-note" class="result-note"></p>
 <button id="download-again" class="button secondary compact hidden" type="button">Download Again</button>
 </div>
-<div id="inline-error" class="inline-error hidden" role="alert">
-<h2 id="error-title">Invalid file</h2>
-<p id="error-message"></p>
-</div>
+<div id="inline-error" class="inline-error hidden" role="alert"><div class="status-mark error-mark" aria-hidden="true">!</div><h2 id="error-title">Invalid file</h2><p id="error-message"></p></div>
 <button id="reset-file" class="button ghost compact reset-file" type="button">Choose another file</button>
 </div>
-<p class="offline-note">Offline only. Online checks may reset DLC ownership.</p>
+<p class="offline-note">Offline only · Online checks may reset changes</p>
 </section>
 </main>
 <script type="module" src="./js/app.js"></script>
