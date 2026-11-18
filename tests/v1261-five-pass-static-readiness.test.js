@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { AUTO_PATCH_PLATFORMS, DLC_CATALOG, MAX_VERIFIED_PROFILE_VERSION,
+import { AUTO_PATCH_PLATFORMS, DLC_CATALOG,
   STANDARD_STOREFRONT_GROUPS } from "../js/config.js";
 import { buildPatchPlan, applyPatchPlan, hasTargetEntitlements,
   validateOwnershipChanges } from "../js/ownership.js";
@@ -9,19 +9,7 @@ import { protectedFingerprint, validateRoundTrip } from "../js/validator.js";
 import { patchProfileBytes } from "../js/auto-patch.js";
 import { verifyNewSixStoreOriginals } from "../tools/verify-native-six-store-v1261.mjs";
 
-const five = [...DLC_CATALOG, {
-  id: "expansion04",
-  anyPlatformId: "Expansion04",
-  family: "Expansion4Pack",
-  displayName: "The Keepsake Sea",
-  entitlements: Object.fromEntries(STANDARD_STOREFRONT_GROUPS.map(group => [
-    group, {
-      PackName: "Expansion4PackExpansionPass_" + group + "_OnlineKey",
-      PackType: "ExpansionPack",
-      Type: "Type_Purchased"
-    }
-  ]))
-}];
+const five = DLC_CATALOG;
 
 function observedProjection() {
   return {
@@ -52,8 +40,8 @@ function observedProjection() {
   };
 }
 
-test("v1.26.1 newly observed expansion is modeled only in an isolated future-catalog fixture", () => {
-  assert.equal(DLC_CATALOG.length, 4);
+test("v1.26.1 new expansion is activated with all six native-derived storefronts", () => {
+  assert.equal(DLC_CATALOG.length, 5);
   assert.equal(five.length, 5);
   assert.equal(five[4].anyPlatformId, "Expansion04");
   assert.deepEqual([...AUTO_PATCH_PLATFORMS], [...STANDARD_STOREFRONT_GROUPS]);
@@ -64,7 +52,6 @@ test("v1.26.1 newly observed expansion is modeled only in an isolated future-cat
     });
   }
   assert.equal(five[4].entitlements.AppleArcade, undefined);
-  assert.equal(MAX_VERIFIED_PROFILE_VERSION, 626);
 });
 
 test("v1.26.1 redacted Nintendo-643 observation supports missing fifth-pass planning for Steam and other four groups", async () => {
@@ -96,18 +83,38 @@ test("v1.26.1 redacted Nintendo-643 observation supports missing fifth-pass plan
   assert.ok(Object.values(repeat.platforms).every(item => item.additions.length === 0));
 });
 
-test("v1.26.1 candidate fifth pass halts on corrupted existing ownership", () => {
+test("v1.26.1 never overwrites mismatched existing fifth-pass metadata", () => {
   const value = observedProjection();
   value.ExpansionPackOwnershipByPlatform.Nintendo.Entries.find(item =>
     item.PackName === five[4].entitlements.Nintendo.PackName).Type = "Type_Unknown";
-  assert.throws(() => buildPatchPlan(value, STANDARD_STOREFRONT_GROUPS, five),
-    /unsupported format/);
+  const before = structuredClone(value);
+  const plan = buildPatchPlan(value, STANDARD_STOREFRONT_GROUPS, five);
+  assert.equal(plan.platforms.Nintendo.additions.length, 0);
+  const after = structuredClone(value);
+  applyPatchPlan(after, plan);
+  assert.deepEqual(after.ExpansionPackOwnershipByPlatform.Nintendo,
+    before.ExpansionPackOwnershipByPlatform.Nintendo);
 });
 
-test("current production version ceiling rejects real-version 643 until compatibility signoff", async () => {
-  const raw = await encryptProfile(observedProjection());
-  await assert.rejects(() => patchProfileBytes(raw),
-    /newer than the validated compatibility range/);
+test("validated profile structure accepts source-observed version 643 and newer values", async () => {
+  const input = observedProjection();
+  const result = await patchProfileBytes(await encryptProfile(input));
+  assert.equal(result.status, "patched");
+  assert.equal(result.version, 643);
+  assert.equal(result.plan.anyPlatform.length, 0);
+  assert.equal(result.plan.platforms.Nintendo.additions.length, 0);
+  assert.equal(result.plan.platforms.Steam.additions.length, 1);
+  assert.ok(["Epic", "Microsoft", "Sony", "Apple"].every(group =>
+    result.plan.platforms[group].additions.length === 5));
+  const after = await decryptGeneratedProfile(result.output);
+  assert.deepEqual(after.ExpansionPackOwnershipByPlatform.Nintendo,
+    input.ExpansionPackOwnershipByPlatform.Nintendo);
+  assert.deepEqual(after.Untouched, input.Untouched);
+  const future = structuredClone(input);
+  future.GameInfo.Version = 750;
+  const next = await patchProfileBytes(await encryptProfile(future));
+  assert.equal(next.version, 750);
+  assert.equal(next.status, "patched");
 });
 
 test("new-build native static verifier refuses missing or synthetic source originals", () => {
