@@ -1,11 +1,9 @@
 export const MIN_SUPPORTED_PROFILE_VERSION = 591;
 export const ZIP_INNER_NAME = "profile";
 export const HEX_KEY = "62357168683873614A38556C444A557A545A5864325467366D626F3857386E35";
-export const PLATFORM_MODES = {
-  switch: ["Nintendo"],
-  steam: ["Steam"],
-  both: ["Nintendo", "Steam"]
-};
+// All verified write formats are applied automatically. Keep other store families
+// research-only until actual platform-owned save records and reload are validated.
+export const AUTO_PATCH_PLATFORMS = Object.freeze(["Nintendo", "Steam"]);
 export const DLC_CATALOG = [
   {
     id: "expansion01",
