@@ -115,11 +115,13 @@ function group(fields) {
   if (!name) throw new Error("A StoreFrontGroup has no UniqueName.");
   const supported = fields.filter(item => item.field === 3).flatMap(enumValues);
   const custom = fields.filter(item => item.field === 4).flatMap(enumValues);
+  const origins = fields.filter(item => item.field === 5).flatMap(enumValues);
   const playFab = first(fields, 6) ?? 0;
   return {
     UniqueName: name,
     SupportedStoreFront: names(supported),
     CustomStoreFront: names(custom, true),
+    OriginIds: origins.sort((a, b) => a - b),
     PlayFabStoreFront: markets[playFab] ?? String(playFab)
   };
 }
